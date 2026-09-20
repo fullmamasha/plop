@@ -141,3 +141,20 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# ---- Plop ----------------------------------------------------------------
+
+# Built extension and dev pages.
+dist-pages/
+
+# Release artifacts go to GitHub Releases and the Chrome Web Store, never here.
+Versions/
+
+# Internal working notes, never published.
+For Agents/
+
+# Local tooling config, not part of the project.
+.impeccable/
+
+*.local
+.DS_Store

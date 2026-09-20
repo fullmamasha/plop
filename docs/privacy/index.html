@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy — Plop</title>
+    <meta
+      name="description"
+      content="Plop processes everything locally on your device. It has no server, no analytics, and never transmits your clipboard, files or browsing history."
+    />
+    <link rel="icon" href="../logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <main class="wrap">
+      <a class="back" href="../">&larr; Plop</a>
+
+      <span class="eyebrow">Plop</span>
+      <h1>Privacy Policy</h1>
+      <p class="updated">Last updated 20 September 2026</p>
+
+      <div class="policy">
+        <h2>Summary</h2>
+        <p>
+          Plop is a browser extension that replaces the file picker on websites
+          that ask you to upload something. Everything it handles is processed
+          <strong>locally on your own device</strong>. Plop has no server, no
+          account, no analytics and no tracking. Nothing it reads is ever sent
+          to the developer or to anyone else.
+        </p>
+
+        <h2>What Plop processes on your device</h2>
+        <p>
+          To do its job, Plop handles the following, entirely within your
+          browser on your computer:
+        </p>
+        <ul>
+          <li>
+            <strong>Clipboard content.</strong> When the Plop window is open,
+            Plop reads your clipboard so that an image, a piece of text or a
+            file you just copied can be offered as an upload. It reads the
+            clipboard only while its window is open in response to your own
+            click or paste, never in the background.
+          </li>
+          <li>
+            <strong>Files you select or pin.</strong> Files you choose, pin for
+            reuse, or upload through Plop are kept in your browser's local
+            storage on your device so they can be offered again later.
+          </li>
+          <li>
+            <strong>Upload-related content on websites.</strong> On a page you
+            visit, Plop looks at the upload control you clicked — the file input
+            and its own settings, such as which file types it accepts and
+            whether it takes more than one file — so that it can offer suitable
+            files and hand your choice back to the page.
+          </li>
+          <li>
+            <strong>Your preferences.</strong> Whether Plop is enabled, and your
+            chosen theme.
+          </li>
+          <li>
+            <strong>Per-site settings.</strong> The websites on which you have
+            chosen to turn Plop off.
+          </li>
+        </ul>
+
+        <h2>What Plop never does</h2>
+        <p>
+          Plop does <strong>not</strong> sell, transmit, share or otherwise
+          disclose your clipboard content, your files, your browsing history or
+          any personal data — not to the developer, and not to any third party.
+        </p>
+        <ul>
+          <li>No data is sent to any server. Plop has no backend of its own.</li>
+          <li>
+            No analytics, telemetry, advertising, cookies, fingerprinting or
+            tracking of any kind.
+          </li>
+          <li>
+            Plop does not read, collect or transmit the content of the pages you
+            visit, the text you type into them, your form entries, your
+            passwords or your cookies.
+          </li>
+          <li>Plop does not record, store or transmit your browsing history.</li>
+          <li>
+            Plop does not build a profile of you and does not share anything
+            with advertisers, data brokers or analytics providers.
+          </li>
+        </ul>
+
+        <h2>Where your data is kept</h2>
+        <p>
+          Preferences and per-site settings are stored through Chrome's own
+          extension storage. Pinned and recent files are stored in your
+          browser's local database on your computer, because file contents
+          cannot be held in extension settings storage.
+        </p>
+        <p>
+          If you have Chrome profile sync switched on, Chrome may sync your Plop
+          <strong>preferences and per-site settings</strong> between your own
+          signed-in devices. That transfer is performed by Chrome, under
+          Google's terms, between your devices — the developer of Plop has no
+          access to it. Your clipboard content and your files are never synced
+          and never leave the device they are on.
+        </p>
+
+        <h2>Permissions and why Plop asks for them</h2>
+        <ul>
+          <li>
+            <strong>Access to websites.</strong> Plop cannot know in advance
+            which sites will ask you for a file, so it runs on http and https
+            pages. On every page it does one thing: it checks whether what you
+            clicked is a file upload control. If it is not, Plop does nothing
+            and your click proceeds normally.
+          </li>
+          <li>
+            <strong>Clipboard read.</strong> So that what you just copied can be
+            offered as the first upload option.
+          </li>
+          <li>
+            <strong>Storage.</strong> So that your preferences, per-site
+            settings and pinned files survive between sessions.
+          </li>
+        </ul>
+
+        <h2>Deleting your data</h2>
+        <p>
+          You can remove pinned files individually from Plop's settings panel.
+          Removing the extension from Chrome deletes everything Plop has stored,
+          including preferences, per-site settings, pinned files and recents.
+          There is nothing held anywhere else to delete.
+        </p>
+
+        <h2>Children</h2>
+        <p>
+          Plop is not directed at children and does not knowingly collect
+          personal information from anyone, of any age.
+        </p>
+
+        <h2>Changes to this policy</h2>
+        <p>
+          If this policy changes, the revised version will be published on this
+          page with a new date above. Material changes will also be noted in the
+          extension's changelog.
+        </p>
+
+        <h2>Contact</h2>
+        <p>
+          Questions about this policy can be raised at the project's
+          <a href="https://github.com/fullmamasha/plop/issues"
+            >issue tracker on GitHub</a
+          >.
+        </p>
+      </div>
+
+      <footer>
+        <p>
+          <a href="../">Plop</a> &middot; open source under the
+          <a href="https://github.com/fullmamasha/plop/blob/main/LICENSE"
+            >MIT license</a
+          >, by <a href="https://artems.design">Artem Udovichenko</a>.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
