@@ -1,0 +1,101 @@
+/* Dev-only chrome for the gallery page. Never ships. */
+
+html,
+body {
+  margin: 0;
+  background: #262626;
+  font-family: "Inter Variable", system-ui, sans-serif;
+  color: #fff;
+}
+
+.gallery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 48px;
+  padding: 48px;
+}
+
+.gallery + .gallery {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stage__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  opacity: 0.6;
+}
+
+.stage .plop-root {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  align-items: flex-start;
+}
+
+.stage__row {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* Stand-in for a host page's upload control — deliberately plain, so it looks
+   like a form on somebody else's site rather than part of Plop. */
+.upload {
+  width: 440px;
+  padding: 20px;
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.upload__label {
+  margin: 0 0 10px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.upload__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+
+/* The pattern Plop has to cope with: a link that clicks a hidden input. */
+.upload__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.upload__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #6cb7ff;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.upload__value {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.upload__note {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: #ffbcbc;
+}

@@ -1,0 +1,1486 @@
+/*
+ * Plop component styles.
+ *
+ * Everything is scoped under .plop-root so the sheet can be adopted into a
+ * shadow root without leaking, and so a host page cannot reach in. No element
+ * selectors outside that scope, no global reset.
+ */
+
+:where(.plop-root),
+:where(.plop-root) *,
+:where(.plop-root) *::before,
+:where(.plop-root) *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.plop-root {
+  font-family: var(--plop-font);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  color: var(--plop-text);
+  text-align: left;
+}
+
+/* Switching theme re-points every alias at once. Easing the paint properties
+   turns that from a snap into a cross-fade. Wrapped in :where() so a component
+   that declares its own transition still wins, and limited to colour-ish
+   properties so no layout or transform animation sneaks in. */
+:where(.plop-root[data-theme]),
+:where(.plop-root[data-theme]) *,
+:where(.plop-root[data-theme]) *::before,
+:where(.plop-root[data-theme]) *::after {
+  transition-property: background-color, background-image, border-color, color,
+    fill, stroke, box-shadow, opacity;
+  transition-duration: var(--plop-dur-base);
+  transition-timing-function: var(--plop-ease-standard);
+}
+
+/* :where() keeps the reset at zero specificity, so any component class below
+   can set its own background/border without having to out-specify it. */
+:where(.plop-root) button {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.plop-root :focus-visible {
+  outline: none;
+  box-shadow: var(--plop-focus);
+}
+
+:where(.plop-root) img,
+:where(.plop-root) svg {
+  display: block;
+}
+
+/* ====================================================================== */
+/* Shared surface                                                          */
+/* ====================================================================== */
+
+.plop-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: var(--plop-radius-surface);
+  filter: drop-shadow(var(--plop-surface-shadow));
+}
+
+/* The glass plate sits behind the content and bleeds half a pixel past the
+   top and bottom edge so the inset highlights are not clipped by the radius. */
+.plop-surface__glass {
+  position: absolute;
+  inset: -0.5px 0 -1px 0;
+  pointer-events: none;
+  backdrop-filter: blur(var(--plop-surface-blur));
+  -webkit-backdrop-filter: blur(var(--plop-surface-blur));
+  background-image: var(--plop-surface-shade),
+    linear-gradient(90deg, var(--plop-surface-base), var(--plop-surface-base));
+  box-shadow: var(--plop-surface-inset);
+}
+
+/* ====================================================================== */
+/* Controls                                                                */
+/* ====================================================================== */
+
+.plop-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: var(--plop-control-height);
+  border-radius: var(--plop-radius-pill);
+  background: var(--plop-control-bg);
+  border: 1px solid var(--plop-control-border);
+}
+
+.plop-pill--action {
+  gap: var(--plop-space-4);
+  padding: 0 22px 0 var(--plop-space-5);
+  font-size: var(--plop-body-size);
+  font-weight: var(--plop-body-weight);
+  letter-spacing: var(--plop-body-tracking);
+  line-height: 1.2;
+  transition: background var(--plop-dur-fast) var(--plop-ease-standard),
+    transform var(--plop-dur-fast) var(--plop-ease-out);
+}
+
+.plop-pill--action:hover {
+  background: var(--plop-control-bg-hover);
+}
+
+.plop-pill--action:active {
+  transform: scale(0.97);
+}
+
+.plop-pill--group {
+  gap: var(--plop-space-1);
+  padding: var(--plop-space-2) var(--plop-space-1);
+}
+
+/* Each action inside the double button owns a circular zone that fills on
+   hover, so the two halves read as separate targets rather than one pill. */
+.plop-iconbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--plop-control-inner);
+  height: var(--plop-control-inner);
+  border-radius: var(--plop-radius-pill);
+  background: transparent;
+  color: var(--plop-text);
+  opacity: 0.6;
+  transition: opacity var(--plop-dur-fast) var(--plop-ease-standard),
+    color var(--plop-dur-fast) var(--plop-ease-standard),
+    background var(--plop-dur-fast) var(--plop-ease-standard),
+    transform var(--plop-dur-fast) var(--plop-ease-out);
+}
+
+.plop-iconbtn:hover {
+  opacity: 1;
+  background: var(--plop-fill);
+}
+
+.plop-iconbtn:active {
+  transform: scale(0.92);
+}
+
+.plop-iconbtn--danger:hover {
+  opacity: 1;
+  color: var(--plop-danger);
+  background: var(--plop-danger-zone);
+}
+
+.plop-icon {
+  display: block;
+  flex-shrink: 0;
+  color: currentColor;
+}
+
+.plop-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* ====================================================================== */
+/* Main widget                                                             */
+/* ====================================================================== */
+
+.plop-widget {
+  width: var(--plop-widget-width);
+}
+
+.plop-widget__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--plop-space-6) 18px 0;
+}
+
+/* No horizontal padding: the rail carries its own inline padding so cards can
+   scroll all the way under the surface edge instead of stopping short of it. */
+.plop-widget__body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--plop-space-4);
+  padding: var(--plop-space-7) 0 var(--plop-space-8);
+}
+
+.plop-rail {
+  display: flex;
+  gap: var(--plop-space-7);
+  align-items: center;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  /* A scroll container clips both axes, and cards lift on hover. The block
+     padding buys vertical room and the negative margin gives it straight back,
+     so the rail still measures exactly 124.5px in the layout. The inline
+     padding is the surface gutter, applied here so the run of cards continues
+     past it rather than being cut off by it. */
+  padding: 6px var(--plop-space-8);
+  margin: -6px 0;
+  scroll-padding-inline: var(--plop-space-8);
+}
+
+.plop-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.plop-rail__empty {
+  display: flex;
+  align-items: center;
+  height: 124px;
+  opacity: 0.5;
+  font-size: var(--plop-label-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-label-tracking);
+}
+
+.plop-rail__divider {
+  flex-shrink: 0;
+  align-self: center;
+  width: 1px;
+  height: 124px;
+  background: var(--plop-divider);
+}
+
+.plop-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plop-space-3);
+  flex-shrink: 0;
+}
+
+/* Rail headings are quieter and larger than the panel's micro-labels: 13px at
+   regular weight, not 11px medium. This class is the widget's alone. */
+.plop-section__label {
+  display: flex;
+  align-items: center;
+  gap: var(--plop-space-2);
+  padding: 0 var(--plop-space-1) 1.5px;
+  opacity: 0.5;
+  font-size: var(--plop-label-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.plop-section__items {
+  display: flex;
+  align-items: center;
+  gap: var(--plop-space-4);
+}
+
+/* ---- Card ------------------------------------------------------------- */
+
+/* The plate hugs the bottom; a text excerpt or file glyph fills what is left
+   above it. The scrim is absolutely positioned, so it never takes layout room
+   from those. */
+.plop-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  width: var(--plop-card-size);
+  height: var(--plop-card-size);
+  border-radius: var(--plop-radius-xl);
+  background: var(--plop-card-bg);
+  overflow: hidden;
+  /* Cards are carried, not selected: a drag must never start a text selection
+     or a native image drag. */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+  transition: transform var(--plop-dur-base) var(--plop-ease-out),
+    box-shadow var(--plop-dur-base) var(--plop-ease-out);
+}
+
+.plop-card:hover,
+.plop-card:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--plop-glow);
+}
+
+.plop-card:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--plop-dur-fast);
+}
+
+/* No radius here: the card is the only layer that rounds and clips. Two
+   rounded layers at slightly different curvatures read as a double edge. */
+.plop-card__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The scrim and the pin fade independently: a pinned card keeps its pin on
+   show without also keeping the gradient on show. */
+.plop-card__top {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  height: 52px;
+  padding: var(--plop-space-4);
+}
+
+.plop-card__top::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--plop-plate-top);
+  opacity: 0;
+  transition: opacity var(--plop-dur-base) var(--plop-ease-out);
+}
+
+.plop-card:hover .plop-card__top::before,
+.plop-card:focus-within .plop-card__top::before {
+  opacity: 1;
+}
+
+.plop-card__pin {
+  position: relative;
+  display: flex;
+  color: var(--plop-on-accent);
+  opacity: 0;
+  transition: transform var(--plop-dur-fast) var(--plop-ease-out),
+    color var(--plop-dur-fast) var(--plop-ease-standard),
+    opacity var(--plop-dur-fast) var(--plop-ease-standard);
+}
+
+.plop-card:hover .plop-card__pin,
+.plop-card:focus-within .plop-card__pin {
+  opacity: 0.9;
+}
+
+.plop-card .plop-card__pin:hover {
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+.plop-card__pin:active {
+  transform: scale(0.9);
+}
+
+/* A pinned card keeps its pin on show so the state survives the pointer
+   leaving the card. It stays white in both themes — the filled glyph is the
+   signal, not a colour change. */
+.plop-card__pin[aria-pressed="true"] {
+  opacity: 1;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
+}
+
+/* A `backdrop-filter` here would need its own radius — it samples the backdrop
+   before the rounded parent clips — and that second rounded layer is exactly
+   the double edge we are avoiding. The gradient alone carries the plate. */
+.plop-card__plate {
+  position: relative;
+  display: flex;
+  padding: var(--plop-space-4) var(--plop-space-5);
+  background: var(--plop-plate);
+}
+
+/* Text and file cards show no imagery, so the plate takes the theme's own
+   colour and the label sits on the card rather than on a photo. */
+.plop-card--flat .plop-card__plate {
+  background: var(--plop-plate-solid);
+}
+
+.plop-card--flat .plop-card__name {
+  color: var(--plop-on-card);
+}
+
+/* The copied text fills the card and fades out downward instead of being
+   clipped mid-line. */
+.plop-card__body {
+  display: flex;
+  flex: 1 0 0;
+  min-height: 0;
+  align-items: center;
+  padding: var(--plop-space-5) var(--plop-space-5) 0;
+}
+
+/* Four lines on a card, then an ellipsis. The gradient fades the last line
+   out; the clamp is what stops a fifth from being half-drawn. */
+.plop-card__excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-size: var(--plop-meta-size);
+  font-weight: var(--plop-meta-weight);
+  letter-spacing: var(--plop-meta-tracking);
+  line-height: 1.2;
+  background: var(--plop-text-fade);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.plop-card__glyph {
+  display: flex;
+  flex: 1 0 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding-top: var(--plop-space-5);
+  color: var(--plop-on-card);
+  opacity: 0.4;
+}
+
+.plop-card__name {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  color: #fff;
+  font-size: var(--plop-label-size);
+  font-weight: var(--plop-label-weight);
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.plop-card__stem {
+  flex: 1 0 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plop-card__ext {
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+/* ---- Pinned cluster --------------------------------------------------- */
+
+.plop-cluster {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: var(--plop-space-2);
+  flex-shrink: 0;
+  width: var(--plop-card-size);
+  height: var(--plop-card-size);
+  padding: var(--plop-space-3);
+  border-radius: var(--plop-radius-xl);
+  background: var(--plop-card-bg);
+  overflow: hidden;
+  transition: transform var(--plop-dur-base) var(--plop-ease-out),
+    box-shadow var(--plop-dur-base) var(--plop-ease-out);
+}
+
+.plop-cluster:hover,
+.plop-cluster:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: var(--plop-glow);
+}
+
+.plop-cluster:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--plop-dur-fast);
+}
+
+.plop-cluster__tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--plop-radius-tile);
+  background: var(--plop-tile-bg);
+  overflow: hidden;
+}
+
+
+
+.plop-cluster__tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- Empty clipboard -------------------------------------------------- */
+
+/* Shown in place of a clipboard card when there is nothing Plop could read.
+   Dashed, because it is a slot waiting to be filled rather than an item. */
+.plop-empty-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--plop-card-size);
+  height: var(--plop-card-size);
+  padding: var(--plop-space-4) var(--plop-space-5);
+  border: 1px dashed var(--plop-empty-border);
+  border-radius: var(--plop-radius-xl);
+  background: var(--plop-empty-bg);
+  color: var(--plop-text);
+  text-align: center;
+  cursor: default;
+}
+
+.plop-empty-card__key {
+  font-size: var(--plop-body-size);
+  font-weight: var(--plop-body-weight);
+  letter-spacing: -0.02em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.plop-empty-card__hint {
+  opacity: 0.6;
+  font-size: var(--plop-label-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.5;
+}
+
+/* ---- Pinned carousel reveal ------------------------------------------- */
+
+/* Opening the cluster unfolds the run of cards from the left; collapsing folds
+   it back into the cluster. Each card is staggered off its index so the run
+   arrives — and leaves — in sequence rather than all at once. */
+@keyframes plop-unfold {
+  from {
+    opacity: 0;
+    transform: translateX(-12px) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes plop-fold {
+  to {
+    opacity: 0;
+    transform: translateX(-12px) scale(0.88);
+  }
+}
+
+.plop-section__items > .plop-unfold {
+  animation: plop-unfold var(--plop-dur-slow) var(--plop-ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+/* Folding runs back-to-front: the last card leaves first. */
+.plop-section__items > .plop-fold {
+  animation: plop-fold var(--plop-dur-base) var(--plop-ease-standard) forwards;
+  animation-delay: calc((var(--fold-count, 1) - var(--i, 0)) * 24ms);
+}
+
+/* ---- Pinned carousel collapse handle ---------------------------------- */
+
+/* Shown once the pinned cluster has been opened into a full run of cards; it
+   folds the run back down to the 2x2 cluster. */
+.plop-collapse {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--plop-space-8);
+  height: 101px;
+  border-radius: var(--plop-radius-xl);
+  background: var(--plop-card-bg);
+  border: 1px solid var(--plop-control-border);
+  color: var(--plop-text);
+  opacity: 0.7;
+  transition: opacity var(--plop-dur-fast) var(--plop-ease-standard),
+    background var(--plop-dur-fast) var(--plop-ease-standard),
+    transform var(--plop-dur-fast) var(--plop-ease-out);
+}
+
+.plop-collapse:hover {
+  opacity: 1;
+  background: var(--plop-control-bg-hover);
+}
+
+.plop-collapse:active {
+  transform: scale(0.94);
+}
+
+/* ---- Scrollbar -------------------------------------------------------- */
+
+/* Plop's own bar, on either axis. The native one is hidden everywhere, so this
+   has to be grabbable, not just an indicator. */
+/* The thumb is absolutely positioned inside the track: percentage margins
+   resolve against the containing block's width on *both* axes, which silently
+   pins a vertical bar in place. */
+.plop-scrollbar {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.plop-scrollbar--x {
+  height: var(--plop-space-4);
+  padding: 0 var(--plop-space-2);
+}
+
+/* `top`/`bottom` are set inline by the caller when the track has to clear a
+   sticky header or footer. */
+.plop-scrollbar--y {
+  position: absolute;
+  top: var(--plop-space-2);
+  right: var(--plop-space-3);
+  bottom: var(--plop-space-2);
+  z-index: 4;
+  width: var(--plop-space-4);
+  padding: var(--plop-space-2) 0;
+}
+
+/* Laid out at its thickest and squashed to the resting 3px with a transform,
+   so hover does not animate a layout property on a scrolling container. */
+.plop-scrollbar__thumb {
+  position: absolute;
+  border-radius: 44px;
+  background: var(--plop-track);
+  transition: transform var(--plop-dur-fast) var(--plop-ease-standard),
+    background var(--plop-dur-fast) var(--plop-ease-standard);
+}
+
+.plop-scrollbar--x .plop-scrollbar__thumb {
+  top: 50%;
+  height: 4px;
+  min-width: 24px;
+  transform: translateY(-50%) scaleY(0.75);
+}
+
+.plop-scrollbar--y .plop-scrollbar__thumb {
+  left: 50%;
+  width: 4px;
+  min-height: 24px;
+  transform: translateX(-50%) scaleX(0.75);
+}
+
+.plop-scrollbar--x:hover .plop-scrollbar__thumb,
+.plop-scrollbar--x.is-dragging .plop-scrollbar__thumb {
+  transform: translateY(-50%) scaleY(1);
+  background: var(--plop-track-active);
+}
+
+.plop-scrollbar--y:hover .plop-scrollbar__thumb,
+.plop-scrollbar--y.is-dragging .plop-scrollbar__thumb {
+  transform: translateX(-50%) scaleX(1);
+  background: var(--plop-track-active);
+}
+
+.plop-scrollbar.is-dragging {
+  cursor: grabbing;
+}
+
+/* The rail's bar sits inside the surface gutter rather than the rail itself. */
+.plop-rail__bar {
+  margin: 0 var(--plop-space-8);
+  min-height: var(--plop-space-4);
+}
+
+/* ====================================================================== */
+/* Settings panel                                                          */
+/* ====================================================================== */
+
+/* Opened from the widget's gear, the panel is a modal parked in the top-right
+   corner of the viewport rather than anchored to anything on the page. */
+.plop-panel-layer {
+  position: fixed;
+  top: 12px;
+  right: 44px;
+  z-index: 1001;
+}
+
+/* The panel is capped and scrolls internally; the header and the footer stay
+   put so the update CTA is always reachable. */
+.plop-panel {
+  width: var(--plop-panel-width);
+  max-height: var(--plop-panel-max-height);
+  background: var(--plop-surface-solid);
+}
+
+.plop-panel__scrollarea {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.plop-panel__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: none;
+}
+
+.plop-panel__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Sticky rather than a sibling of the scroller: content passes underneath and
+   is blurred and faded out by the gradient instead of meeting a hard edge. */
+.plop-panel__header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: var(--plop-space-7) var(--plop-space-7) var(--plop-space-2);
+  background: var(--plop-sticky-top);
+}
+
+.plop-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--plop-space-3);
+}
+
+.plop-brand__logo {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.plop-brand__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plop-space-1);
+}
+
+.plop-brand__name {
+  font-size: var(--plop-title-size);
+  font-weight: var(--plop-title-weight);
+  letter-spacing: var(--plop-title-tracking);
+  line-height: 1;
+}
+
+.plop-brand__kicker {
+  font-size: var(--plop-eyebrow-size);
+  font-weight: var(--plop-eyebrow-weight);
+  letter-spacing: var(--plop-eyebrow-tracking);
+  line-height: 1.24;
+  opacity: 0.4;
+}
+
+.plop-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--plop-space-3);
+  padding: 0 var(--plop-space-8);
+}
+
+.plop-group--settings {
+  padding-top: var(--plop-space-4);
+  padding-bottom: var(--plop-space-5);
+}
+
+.plop-group--pinned {
+  padding-top: var(--plop-space-5);
+  padding-bottom: var(--plop-space-4);
+}
+
+/* Pinned to the bottom of the scrollport, 24px of clearance below it. */
+.plop-group--footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  padding-top: var(--plop-space-4);
+  padding-bottom: var(--plop-space-8);
+  background: var(--plop-sticky-bottom);
+}
+
+/* ---- Progressive blur on the sticky edges ----------------------------- */
+
+/* A single `backdrop-filter` blurs its whole box evenly, which leaves a hard
+   line where the blur stops. Stacking masked blur layers ramps it instead:
+   each layer blurs what the one below already blurred, over a shorter band, so
+   the strength follows the gradient — 0px where the gradient is transparent,
+   12px where it is solid.
+
+   The layers are pseudo-elements rather than the sticky element itself,
+   because a mask on that element would clip its gradient background too. */
+.plop-panel__header::before,
+.plop-panel__header::after,
+.plop-group--footer::before,
+.plop-group--footer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.plop-panel__header::before,
+.plop-group--footer::before {
+  backdrop-filter: blur(calc(var(--plop-sticky-blur) / 3));
+  -webkit-backdrop-filter: blur(calc(var(--plop-sticky-blur) / 3));
+}
+
+.plop-panel__header::after,
+.plop-group--footer::after {
+  backdrop-filter: blur(var(--plop-sticky-blur));
+  -webkit-backdrop-filter: blur(var(--plop-sticky-blur));
+}
+
+/* The header is solid at its top edge, so the strong layer sits there. */
+.plop-panel__header::before {
+  mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+}
+
+.plop-panel__header::after {
+  mask-image: linear-gradient(180deg, #000 0%, transparent 55%);
+}
+
+/* The footer is the other way up. */
+.plop-group--footer::before {
+  mask-image: linear-gradient(0deg, #000 0%, transparent 100%);
+}
+
+.plop-group--footer::after {
+  mask-image: linear-gradient(0deg, #000 0%, transparent 55%);
+}
+
+/* Without `backdrop-filter` the ramp cannot exist; the gradient carries the
+   separation on its own and the content gets more room to breathe instead. */
+@supports not (backdrop-filter: blur(1px)) {
+  .plop-panel__header::before,
+  .plop-panel__header::after,
+  .plop-group--footer::before,
+  .plop-group--footer::after {
+    display: none;
+  }
+
+  .plop-panel__header {
+    padding-bottom: var(--plop-space-5);
+  }
+
+  .plop-group--footer {
+    padding-top: var(--plop-space-5);
+  }
+}
+
+.plop-group__head {
+  display: flex;
+  align-items: center;
+  gap: var(--plop-space-4);
+  padding: var(--plop-space-1);
+}
+
+.plop-group__title {
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  align-items: center;
+  gap: var(--plop-space-1);
+  padding-bottom: 1px;
+  font-size: var(--plop-heading-size);
+  font-weight: var(--plop-heading-weight);
+  letter-spacing: var(--plop-heading-tracking);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.plop-group__count {
+  font-size: var(--plop-label-size);
+  font-weight: var(--plop-label-weight);
+  letter-spacing: var(--plop-label-tracking);
+  opacity: 0.4;
+}
+
+.plop-version {
+  display: flex;
+  align-items: center;
+  gap: var(--plop-space-2);
+  font-size: var(--plop-label-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.2;
+  opacity: 0.6;
+}
+
+.plop-version__dot {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--plop-success);
+}
+
+.plop-version__dot--stale {
+  background: var(--plop-warning);
+}
+
+/* A quiet text action: it reports state as often as it invites a press. */
+.plop-check {
+  align-self: flex-start;
+  padding: var(--plop-space-1) var(--plop-space-1);
+  color: var(--plop-text);
+  opacity: 0.6;
+  font-size: var(--plop-label-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.2;
+  text-align: left;
+  transition: opacity var(--plop-dur-fast) var(--plop-ease-standard);
+}
+
+.plop-check:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.plop-check:disabled {
+  cursor: default;
+}
+
+/* ---- Rows ------------------------------------------------------------- */
+
+.plop-row {
+  display: flex;
+  align-items: center;
+  gap: var(--plop-space-4);
+  border-radius: var(--plop-radius-md);
+  background: var(--plop-fill-subtle);
+  transition: background var(--plop-dur-fast) var(--plop-ease-standard);
+}
+
+.plop-row--setting {
+  padding: var(--plop-space-5) 18px var(--plop-space-5) var(--plop-space-5);
+}
+
+.plop-row--file {
+  height: var(--plop-pinned-row-height);
+  padding: var(--plop-space-3) 14px var(--plop-space-3) var(--plop-space-3);
+  /* Scales about its own centre so neighbours stay put and the row does not
+     appear to slide sideways — the macOS dock, not a carousel. */
+  transform-origin: center center;
+  transition: background var(--plop-dur-base) var(--plop-ease-standard),
+    transform var(--plop-dur-base) var(--plop-ease-out),
+    box-shadow var(--plop-dur-base) var(--plop-ease-out);
+}
+
+/* A solid step in fill, not a glow: the row is a list item, not a surface. */
+.plop-row--file:hover,
+.plop-row--file:focus-within {
+  transform: scale(1.035);
+  background: var(--plop-row-hover);
+  z-index: 1;
+}
+
+/* Scoped to setting rows: file rows declare their own solid hover fill below,
+   and a bare `.plop-row:hover` would out-order it at equal specificity. */
+.plop-row--setting:hover {
+  background: var(--plop-fill);
+}
+
+/* When Plop is off everywhere, the per-site row is not merely unswitchable —
+   the whole block is out of play. */
+.plop-row[aria-disabled="true"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.plop-row__copy {
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--plop-space-1);
+}
+
+.plop-row__title {
+  font-size: var(--plop-label-size);
+  font-weight: 600;
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plop-row__excerpt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--plop-label-size);
+  font-weight: var(--plop-label-weight);
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.2;
+}
+
+.plop-row__title--file {
+  font-weight: var(--plop-label-weight);
+}
+
+.plop-row__ext {
+  color: var(--plop-text-faint);
+}
+
+.plop-row__desc {
+  font-size: var(--plop-label-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.2;
+  opacity: 0.6;
+}
+
+.plop-row__meta {
+  font-size: var(--plop-meta-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-meta-tracking);
+  line-height: 1.2;
+  opacity: 0.5;
+}
+
+.plop-row__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--plop-thumb-size);
+  height: var(--plop-thumb-size);
+  flex-shrink: 0;
+  border-radius: var(--plop-radius-row-thumb);
+  background: var(--plop-tile-bg);
+  overflow: hidden;
+}
+
+/* Stand-in preview for a file with no thumbnail. */
+.plop-row__thumb-glyph,
+.plop-cluster__glyph {
+  color: var(--plop-glyph);
+  opacity: var(--plop-glyph-opacity);
+}
+
+.plop-row__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The 28px box is the hover zone that fills with the danger tint, the same
+   idea as the close button in the widget. The glyph is drawn at full strength
+   in that state — the resting 50% is a neutral dim, not a dim red. */
+.plop-row__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--plop-radius-thumb);
+  background: transparent;
+  color: var(--plop-text);
+  opacity: 0;
+  transition: opacity var(--plop-dur-fast) var(--plop-ease-standard),
+    color var(--plop-dur-fast) var(--plop-ease-standard),
+    background var(--plop-dur-fast) var(--plop-ease-standard),
+    transform var(--plop-dur-fast) var(--plop-ease-out);
+}
+
+.plop-row:hover .plop-row__delete,
+.plop-row:focus-within .plop-row__delete {
+  opacity: 0.5;
+}
+
+.plop-row .plop-row__delete:hover,
+.plop-row .plop-row__delete:focus-visible {
+  opacity: 1;
+  color: var(--plop-danger);
+  background: var(--plop-danger-zone);
+}
+
+.plop-row__delete:active {
+  transform: scale(0.9);
+}
+
+/* ---- Switch ----------------------------------------------------------- */
+
+.plop-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--plop-switch-track-w);
+  height: var(--plop-switch-track-h);
+  border-radius: 1000px;
+  background: var(--plop-switch-off);
+  transition: background var(--plop-dur-base) var(--plop-ease-standard);
+}
+
+.plop-switch[aria-checked="true"] {
+  background: var(--plop-accent);
+}
+
+.plop-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* While the switch is held the knob stretches toward the side it is about to
+   travel to and turns glassy; releasing it snaps to the other end. The width
+   is what stretches, and the offset is derived from the same variable so the
+   knob stays inside the track whichever end it is anchored to.
+   ponytail: `width` is a layout property, but the knob is absolutely
+   positioned inside a 50px track — nothing else can reflow. */
+.plop-switch__knob {
+  --knob-w: var(--plop-switch-knob-w);
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: var(--knob-w);
+  height: var(--plop-switch-knob-h);
+  border-radius: 100px;
+  background: #fff;
+  box-shadow: 0 3px 36px rgba(0, 0, 0, 0.05);
+  transform: translateY(-50%);
+  transition: transform var(--plop-dur-base) var(--plop-ease-out),
+    width var(--plop-dur-base) var(--plop-ease-out),
+    background var(--plop-dur-base) var(--plop-ease-standard);
+}
+
+.plop-switch[aria-checked="true"] .plop-switch__knob {
+  transform: translate(
+    calc(var(--plop-switch-track-w) - var(--knob-w) - 4px),
+    -50%
+  );
+}
+
+.plop-switch.is-holding:not(:disabled) .plop-switch__knob {
+  --knob-w: calc(var(--plop-switch-knob-w) + 6px);
+  background: var(--plop-knob-glass);
+  backdrop-filter: blur(6px) saturate(160%);
+  -webkit-backdrop-filter: blur(6px) saturate(160%);
+}
+
+/* ---- Segmented control ------------------------------------------------ */
+
+/* The selected half is a single indicator that travels behind the labels,
+   the same gesture as the switch knob — not a background that blinks from one
+   option to the other. `--index` is set from the component. */
+.plop-segmented {
+  position: relative;
+  display: flex;
+  gap: var(--plop-space-2);
+  padding: var(--plop-space-2);
+  border-radius: var(--plop-radius-segment);
+  background: var(--plop-fill-subtle);
+}
+
+.plop-segmented__indicator {
+  position: absolute;
+  top: var(--plop-space-2);
+  left: var(--plop-space-2);
+  width: calc((100% - var(--plop-space-2) * 3) / 2);
+  height: 36px;
+  border-radius: var(--plop-radius-segment-inner);
+  background: var(--plop-segmented-on);
+  box-shadow: var(--plop-segmented-on-shadow);
+  transform: translateX(
+    calc(var(--index, 0) * (100% + var(--plop-space-2)))
+  );
+  transition: transform var(--plop-dur-base) var(--plop-ease-out),
+    background var(--plop-dur-base) var(--plop-ease-standard);
+}
+
+.plop-segmented__option {
+  position: relative;
+  display: flex;
+  flex: 1 0 0;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: var(--plop-space-3);
+  height: 36px;
+  padding: var(--plop-space-4);
+  border-radius: var(--plop-radius-segment-inner);
+  background: transparent;
+  font-size: var(--plop-label-size);
+  font-weight: var(--plop-label-weight);
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.2;
+  opacity: 0.6;
+  transition: opacity var(--plop-dur-base) var(--plop-ease-standard),
+    color var(--plop-dur-base) var(--plop-ease-standard);
+}
+
+.plop-segmented__option:hover {
+  opacity: 0.85;
+}
+
+.plop-segmented__option[aria-checked="true"] {
+  opacity: 1;
+  color: var(--plop-on-segmented);
+}
+
+/* ---- Buttons ---------------------------------------------------------- */
+
+.plop-btn-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  gap: var(--plop-space-4);
+  height: 32px;
+  padding: 0 14px 0 var(--plop-space-4);
+  border-radius: var(--plop-radius-pill);
+  background: var(--plop-control-bg);
+  border: 1px solid var(--plop-control-border);
+  font-size: var(--plop-label-size);
+  font-weight: var(--plop-label-weight);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  transition: background var(--plop-dur-fast) var(--plop-ease-standard),
+    transform var(--plop-dur-fast) var(--plop-ease-out);
+}
+
+.plop-btn-add:hover {
+  background: var(--plop-control-bg-hover);
+}
+
+.plop-btn-add:active {
+  transform: scale(0.96);
+}
+
+.plop-btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: var(--plop-row-height);
+  padding: 0 var(--plop-space-5);
+  border-radius: var(--plop-radius-pill);
+  background: var(--plop-accent);
+  border: 1px solid var(--plop-control-border);
+  color: var(--plop-on-accent);
+  font-size: var(--plop-body-size);
+  font-weight: var(--plop-body-weight);
+  letter-spacing: var(--plop-body-tracking);
+  line-height: 1.2;
+  transition: filter var(--plop-dur-fast) var(--plop-ease-standard),
+    transform var(--plop-dur-fast) var(--plop-ease-out);
+}
+
+.plop-btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+/* Presses outward, not inward: the primary action is the one thing in the
+   panel that should feel like it comes toward you. */
+.plop-btn-primary:active {
+  transform: scale(1.03);
+}
+
+.plop-btn-primary[aria-busy="true"] {
+  gap: var(--plop-space-4);
+  cursor: progress;
+}
+
+.plop-btn-primary[aria-busy="true"]:hover {
+  filter: none;
+}
+
+.plop-btn-primary[aria-busy="true"]:active {
+  transform: none;
+}
+
+@keyframes plop-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.plop-spinner {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.32);
+  border-top-color: var(--plop-on-accent);
+  animation: plop-spin 700ms linear infinite;
+}
+
+/* Deliberately not a flex container: a flex box drops the space between the
+   "by" text node and the author link. */
+.plop-byline {
+  text-align: center;
+  padding: var(--plop-space-1);
+  font-size: var(--plop-label-size);
+  font-weight: 400;
+  letter-spacing: var(--plop-label-tracking);
+  line-height: 1.2;
+  opacity: 0.8;
+}
+
+.plop-byline a {
+  color: inherit;
+}
+
+/* A deleted row destroys itself: it slides left, blurs out, and collapses so
+   the rows below close the gap in the same motion. Height is animated on
+   purpose — the layout has to move, and the row's height is a fixed token so
+   nothing needs measuring first.
+   ponytail: animates height/padding; a 312px row in a flex column, and the
+   collapse is the point. */
+@keyframes plop-row-out {
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+    filter: blur(6px);
+    height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: calc(var(--plop-space-3) * -1);
+  }
+}
+
+.plop-row--removing {
+  overflow: hidden;
+  pointer-events: none;
+  animation: plop-row-out var(--plop-dur-base) var(--plop-ease-standard)
+    forwards;
+}
+
+/* ====================================================================== */
+/* Carrying an item out                                                    */
+/* ====================================================================== */
+
+/* The card being carried dims in place rather than vanishing, so the eye keeps
+   the slot it will return to. */
+.plop-card.is-dragging {
+  opacity: 0.25;
+  filter: blur(1px);
+  transition: opacity var(--plop-dur-fast) var(--plop-ease-standard),
+    filter var(--plop-dur-fast) var(--plop-ease-standard);
+}
+
+/* The travelling copy. Fixed, and a sibling of the surface — the surface sets
+   `filter`, which would otherwise make it the containing block and clip this. */
+.plop-ghost {
+  position: fixed;
+  z-index: 2147483000;
+  pointer-events: none;
+  cursor: grabbing;
+  transform-origin: center;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.36));
+}
+
+.plop-ghost > * {
+  transform: scale(1.06) rotate(-2deg);
+  transition: none;
+}
+
+/* Missed the drop: fly home, fading and blurring out on the way. The original
+   is still sitting there dimmed, so it simply comes back up. */
+.plop-ghost.is-returning {
+  transition: transform var(--plop-dur-slow) var(--plop-ease-out),
+    opacity var(--plop-dur-slow) var(--plop-ease-standard),
+    filter var(--plop-dur-slow) var(--plop-ease-standard);
+  opacity: 0;
+  filter: blur(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plop-ghost.is-returning {
+    transition-duration: 80ms;
+  }
+}
+
+/* ====================================================================== */
+/* Smooth corners                                                          */
+/* ====================================================================== */
+
+/* Continuous curvature rather than a circular arc, tuned by `--plop-corner`.
+   Chrome without `corner-shape` keeps the plain rounded corner — nothing is
+   lost. Pills are deliberately absent: a capsule end cap must stay circular. */
+@supports (corner-shape: squircle) {
+  .plop-surface,
+  .plop-card,
+  .plop-cluster,
+  .plop-cluster__tile,
+  .plop-collapse,
+  .plop-row,
+  .plop-row__thumb,
+  .plop-segmented,
+  .plop-segmented__indicator,
+  .plop-segmented__option,
+  .plop-row__delete {
+    corner-shape: var(--plop-corner);
+  }
+}
+
+/* ====================================================================== */
+/* Entrance + preferences                                                  */
+/* ====================================================================== */
+
+/* Grows out of whatever opened it: the origin is the top edge, because the
+   widget is anchored below its control. Scale and opacity only, and the
+   opacity finishes early so the surface reads as solid while it is still
+   settling — the trick that makes a macOS menu feel fast rather than floaty. */
+@keyframes plop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes plop-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.96);
+  }
+}
+
+.plop-surface {
+  transform-origin: top center;
+  animation: plop-in var(--plop-dur-reveal) var(--plop-ease-out) 1;
+}
+
+/* Leaving is quicker than arriving — a dismissal should feel already-done. */
+.plop-surface--exit {
+  animation: plop-out var(--plop-dur-dismiss) var(--plop-ease-standard) forwards;
+  pointer-events: none;
+}
+
+/* The gallery shows every surface at rest; only a surface that has actually
+   just appeared should play the reveal. */
+.plop-root--static .plop-surface {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plop-root *,
+  .plop-root *::before,
+  .plop-root *::after {
+    animation-duration: 80ms !important;
+    transition-duration: 80ms !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .plop-surface,
+  .plop-pill,
+  .plop-row,
+  .plop-card,
+  .plop-cluster,
+  .plop-btn-primary,
+  .plop-btn-add {
+    border: 1px solid ButtonText;
+    box-shadow: none;
+  }
+
+  .plop-surface {
+    filter: none;
+  }
+}

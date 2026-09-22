@@ -1,0 +1,27 @@
+{
+  "name": "plop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A polished clipboard-first file upload extension for the web.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --mode pages",
+    "build": "tsc --noEmit && node scripts/build.mjs",
+    "build:pages": "vite build --mode pages",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "package": "npm run build && node scripts/package.mjs"
+  },
+  "dependencies": {
+    "preact": "^10.27.2"
+  },
+  "devDependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@preact/preset-vite": "^2.10.2",
+    "@types/chrome": "^0.3.0",
+    "@types/node": "^26.6.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.12"
+  }
+}

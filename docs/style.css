@@ -137,14 +137,17 @@ h1 {
   transform: scale(0.98);
 }
 
+/* The brand blue (#118ff6) holds only 3.3:1 under white 15px text, so the
+   filled button uses a deeper shade of it. Links keep the brand blue, which
+   clears AA against the dark page. */
 .button.primary {
-  background: var(--accent);
+  background: #0b6fd1;
   border-color: transparent;
   color: #ffffff;
 }
 
 .button.primary:hover {
-  background: #2b9bf8;
+  background: #095fb3;
 }
 
 .features {

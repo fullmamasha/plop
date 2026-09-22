@@ -1,0 +1,121 @@
+/* Deliberately plain: this page stands in for somebody else's website, so it
+   must not borrow Plop's own look. */
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: #14161a;
+  color: #e9ecf1;
+  font-family: "Inter Variable", system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 100vh;
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.page__title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.page__hint {
+  max-width: 44ch;
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(233, 236, 241, 0.6);
+}
+
+.page__note {
+  max-width: 48ch;
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #ffbcbc;
+}
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: min(520px, 100%);
+  padding: 44px 24px;
+  border: 2px dashed rgba(233, 236, 241, 0.24);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.drop:hover {
+  border-color: rgba(233, 236, 241, 0.44);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.drop__icon {
+  font-size: 22px;
+  opacity: 0.55;
+}
+
+.drop__label {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.drop__sub {
+  font-size: 13px;
+  color: rgba(233, 236, 241, 0.5);
+}
+
+/* Plop floats above the page, the way the extension will, anchored under the
+   control that opened it.
+
+   No `transform` here — not even `translateX(-50%)` for centring. A transform
+   makes this a containing block for `position: fixed` descendants, and the
+   drag ghost is one of those: it would be positioned against this box instead
+   of the viewport and land nowhere near the pointer. The left offset is
+   computed from the anchor's rect instead. */
+.plop-layer {
+  position: fixed;
+  z-index: 1000;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Stands in for the browser's own extensions menu button. */
+.toolbar-button {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border: 1px solid rgba(233, 236, 241, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(233, 236, 241, 0.8);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.toolbar-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}

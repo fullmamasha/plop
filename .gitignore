@@ -158,3 +158,6 @@ For Agents/
 
 *.local
 .DS_Store
+
+# Local editor and agent tooling.
+.claude/

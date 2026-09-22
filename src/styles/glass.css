@@ -1,0 +1,114 @@
+/*
+ * Glass edge — a 1px luminous ring around a surface, with a highlight that can
+ * rotate around it.
+ *
+ * The ring is NOT a border. It is a pseudo-element filled edge to edge with a
+ * gradient, masked so only a 1px band around the perimeter survives. A plain
+ * gradient border (padding-box + border-box fills) needs an opaque background;
+ * Plop's surfaces are translucent, so the gradient bleeds through the whole
+ * plate and the ring disappears.
+ *
+ * Three things silently kill the rotation, all avoided below:
+ *   1. an angle keyword (`to bottom left`) — keywords do not interpolate.
+ *   2. no @property registration — the gradient is treated as one string and
+ *      the value snaps at the end instead of moving frame by frame.
+ *   3. var()/calc() inside @keyframes — Chrome drops the whole animation.
+ *      Keyframes carry literals only.
+ *
+ * Meaning: on a card or a tile the ring means hovered/selected. On a button it
+ * is permanent and only the highlight moves. Never both.
+ */
+
+@property --plop-edge-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 189deg;
+}
+
+@keyframes plop-edge-turn {
+  from {
+    --plop-edge-angle: 260deg;
+  }
+  to {
+    --plop-edge-angle: 189deg;
+  }
+}
+
+@keyframes plop-edge-spin {
+  from {
+    --plop-edge-angle: 99deg;
+  }
+  to {
+    --plop-edge-angle: 189deg;
+  }
+}
+
+/* The ring itself. Applied to anything carrying .plop-edge. */
+.plop-edge {
+  position: relative;
+}
+
+.plop-edge::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  /* `corner-shape` does not inherit. Without this the ring traces a circular
+     arc while the surface is clipped as a superellipse, and the two curves
+     diverge at every corner — the ring appears to cut inside the block. */
+  corner-shape: inherit;
+  background: linear-gradient(
+    var(--plop-edge-angle, 189deg),
+    var(--plop-edge-stops)
+  );
+  pointer-events: none;
+  z-index: 2;
+  -webkit-mask: linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* An accent-filled control keeps the white ring in both themes. Set as a
+   variable rather than a second ::after rule so the mask stays in one place. */
+.plop-edge--on-accent {
+  --plop-edge-stops: var(--plop-edge-stops-on-accent);
+}
+
+/* --- Permanent ring (buttons): only the highlight moves ----------------- */
+.plop-edge--always:hover::after {
+  animation: plop-edge-spin var(--plop-dur-edge-hover) var(--plop-ease-standard)
+    1;
+}
+
+.plop-edge--always:active::after {
+  animation: plop-edge-turn var(--plop-dur-edge-press) var(--plop-ease-standard)
+    1;
+}
+
+/* --- Ring as state (cards, tiles): fades in, then the highlight lands --- */
+.plop-edge--state::after {
+  opacity: 0;
+  transition: opacity var(--plop-dur-base) var(--plop-ease-out);
+}
+
+.plop-edge--state.is-on::after,
+.plop-edge--state:hover::after,
+.plop-edge--state:focus-visible::after {
+  opacity: 1;
+  animation: plop-edge-turn var(--plop-dur-slow) var(--plop-ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plop-edge::after {
+    animation-name: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .plop-edge::after {
+    background: ButtonText;
+  }
+}

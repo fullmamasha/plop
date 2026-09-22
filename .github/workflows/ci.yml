@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check the manifest version matches package.json
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          man=$(node -p "require('./dist/manifest.json').version")
+          if [ "$pkg" != "$man" ]; then
+            echo "package.json is $pkg but dist/manifest.json is $man"
+            exit 1
+          fi
+          echo "Version $pkg is consistent."

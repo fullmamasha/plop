@@ -1,0 +1,291 @@
+/*
+ * Plop design tokens.
+ *
+ * Every visually meaningful value lives here. Components never hardcode a
+ * colour, radius, duration or size — they read a token. Values are taken from
+ * the Figma source (file i5pByiCWjX3opaJjuxI7xx); node ids are noted where a
+ * value would otherwise look arbitrary.
+ *
+ * Themes: the dark palette is the default. `[data-theme="light"]` on the same
+ * element redefines the semantic aliases; nothing else in the stylesheet
+ * knows a theme exists.
+ */
+
+.plop-root {
+  /* ---- Typography ------------------------------------------------------ */
+  --plop-font: "Inter Variable", "Inter", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+
+  /* size / weight / line-height / tracking, per role.
+     Tracking comes from Figma and is not a flat -1%: display and micro labels
+     sit at -1%, everything in the body sits at -1.5% to -2%. */
+  --plop-title-size: 20px;
+  --plop-title-weight: 600;
+  --plop-title-tracking: -0.01em;
+
+  --plop-body-size: 15px;
+  --plop-body-weight: 500;
+  --plop-body-tracking: -0.015em;
+
+  --plop-heading-size: 15px;
+  --plop-heading-weight: 600;
+  --plop-heading-tracking: -0.02em;
+
+  --plop-label-size: 13px;
+  --plop-label-weight: 500;
+  --plop-label-tracking: -0.02em;
+
+  --plop-meta-size: 11px;
+  --plop-meta-weight: 500;
+  --plop-meta-tracking: -0.02em;
+
+  --plop-eyebrow-size: 11px;
+  --plop-eyebrow-weight: 600;
+  --plop-eyebrow-tracking: -0.01em;
+
+  /* ---- Spacing --------------------------------------------------------- */
+  --plop-space-1: 2px;
+  --plop-space-2: 4px;
+  --plop-space-3: 6px;
+  --plop-space-4: 8px;
+  --plop-space-5: 12px;
+  --plop-space-6: 16px;
+  --plop-space-7: 20px;
+  --plop-space-8: 24px;
+
+  /* ---- Radii ----------------------------------------------------------- */
+  --plop-radius-thumb: 8px;
+  --plop-radius-sm: 12px;
+  --plop-radius-md: 14px;
+  --plop-radius-lg: 16px;
+  --plop-radius-xl: 28px;
+  --plop-radius-surface: 48px;
+  --plop-radius-pill: 200px;
+
+  /* Nesting rule: an inner radius is its container's radius minus the gap
+     between them, so the two curves stay concentric. Every nested radius is
+     written as that subtraction rather than as its own number. */
+  --plop-radius-segment: 20px;
+  /* 20 - 4px padding */
+  --plop-radius-segment-inner: calc(
+    var(--plop-radius-segment) - var(--plop-space-2)
+  );
+  /* 28 - 6px cluster padding */
+  --plop-radius-tile: calc(var(--plop-radius-xl) - var(--plop-space-3));
+  /* 14 - 6px row padding */
+  --plop-radius-row-thumb: calc(var(--plop-radius-md) - var(--plop-space-3));
+
+  /* Corner softness, one knob. superellipse(1) is a plain circular arc;
+     higher values hug the edges sooner and read flatter. 2 (= `squircle`)
+     matches the curve measured off the Figma card corner. Capsules keep the
+     circular arc — a superellipse distorts an end cap. */
+  --plop-corner: superellipse(2);
+
+  /* ---- Fixed sizes taken from the design ------------------------------- */
+  --plop-widget-width: 440px;
+  --plop-panel-width: 360px;
+  --plop-control-height: 40px; /* header pills */
+  --plop-control-inner: 34px;  /* circular button inside a pill */
+  --plop-card-size: 100px;
+  --plop-row-height: 48px;
+  --plop-pinned-row-height: 56px;
+  --plop-thumb-size: 44px;
+  --plop-panel-max-height: 520px;
+  --plop-switch-track-w: 50px;
+  --plop-switch-track-h: 24px;
+  --plop-switch-knob-w: 32px;
+  --plop-switch-knob-h: 20px;
+
+  /* ---- Motion ---------------------------------------------------------- */
+  --plop-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --plop-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --plop-dur-fast: 140ms;
+  --plop-dur-base: 220ms;
+  --plop-dur-slow: 400ms;
+  /* The widget appearing. Short on purpose: a menu that takes its time reads
+     as slow, not smooth. */
+  --plop-dur-reveal: 260ms;
+  --plop-dur-dismiss: 160ms;
+  --plop-dur-edge-hover: 960ms;
+  --plop-dur-edge-press: 800ms;
+
+  /* ---- Glass edge ------------------------------------------------------ */
+  /* Only the stops are exported: the gradient itself is assembled inside each
+     rule so that --plop-edge-angle resolves on the pseudo-element being
+     animated, not here. See DESIGN.md § Glass edge. */
+  --plop-edge-stops: rgba(255, 255, 255, 0.12) 10%,
+    rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.12) 90%;
+  --plop-edge-rest: 189deg;
+  --plop-glow: inset 0 0 16px rgba(255, 255, 255, 0.12);
+
+  /* ---- Dark palette (default) ------------------------------------------ */
+  --plop-surface-base: rgba(0, 0, 0, 0.94);
+  --plop-surface-solid: #1e1e1e;
+  --plop-surface-blur: 11px;
+  --plop-surface-shade: radial-gradient(
+    98% 100% at 50% 0%,
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  --plop-surface-inset: inset 0 40px 10px -40px #2c2c2c,
+    inset 0 -40px 10px -40px #1a1a1a;
+  --plop-surface-shadow: 0 18px 24px rgba(0, 0, 0, 0.12);
+
+  /* Sticky edges of the settings panel. Content scrolls underneath and is
+     blurred and faded out by these rather than being cut off by a hard edge. */
+  --plop-sticky-blur: 12px;
+  --plop-sticky-top: linear-gradient(180deg, #1e1e1e 0%, rgba(30, 30, 30, 0) 100%);
+  --plop-sticky-bottom: linear-gradient(180deg, rgba(30, 30, 30, 0) 0%, #1e1e1e 100%);
+
+  --plop-control-bg: #1a1a1a;
+  --plop-control-bg-hover: #242424;
+  --plop-control-border: rgba(255, 255, 255, 0.08);
+  --plop-card-bg: #1e1e1e;
+  --plop-tile-bg: #2a2a2a;
+  /* The "nothing on the clipboard" placeholder card. */
+  --plop-empty-bg: #282828;
+  --plop-empty-border: rgba(255, 255, 255, 0.22);
+  /* A glyph standing in for a missing thumbnail. */
+  --plop-glyph: #ffffff;
+  --plop-glyph-opacity: 0.5;
+
+  --plop-fill-subtle: rgba(255, 255, 255, 0.04);
+  --plop-fill: rgba(255, 255, 255, 0.08);
+  --plop-fill-strong: rgba(255, 255, 255, 0.12);
+
+  /* The travelling indicator behind the selected segment. */
+  --plop-segmented-on: var(--plop-fill-strong);
+  --plop-segmented-on-shadow: none;
+  --plop-on-segmented: var(--plop-text);
+
+  --plop-text: #ffffff;
+  --plop-text-muted: rgba(255, 255, 255, 0.6);
+  --plop-text-faint: rgba(255, 255, 255, 0.44);
+  --plop-divider: rgba(255, 255, 255, 0.08);
+  --plop-track: rgba(255, 255, 255, 0.12);
+  --plop-track-active: rgba(255, 255, 255, 0.3);
+  --plop-switch-off: rgba(0, 0, 0, 0.2);
+  /* The switch knob while it is being pressed: translucent rather than solid. */
+  --plop-knob-glass: rgba(255, 255, 255, 0.68);
+
+  --plop-accent: #118ff6;
+  --plop-warning: #f5a524;
+  --plop-success: #2ec27e;
+  --plop-on-accent: #ffffff;
+
+  /* Destructive actions read as a soft pink on dark and a saturated red on
+     light. Each comes with the translucent "zone" its button fills on hover. */
+  --plop-danger: #ffbcbc;
+  --plop-danger-zone: rgba(255, 152, 152, 0.12);
+
+  /* The glass edge assembled over an accent fill stays white in both themes —
+     a dark ring on the blue button reads as a hairline crack. */
+  --plop-edge-stops-on-accent: rgba(255, 255, 255, 0.16) 10%,
+    rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0.16) 90%;
+
+  /* Filename plate sitting on top of a thumbnail — always dark, both themes,
+     because it overlays arbitrary imagery. */
+  --plop-plate: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0) 0%,
+    rgba(30, 30, 30, 0.86) 100%
+  );
+  --plop-plate-top: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0.44) 0%,
+    rgba(30, 30, 30, 0) 100%
+  );
+
+  /* Text and file cards have no imagery under them, so their plate follows the
+     theme instead of always being dark. */
+  --plop-plate-solid: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0) 0%,
+    rgba(30, 30, 30, 0.86) 100%
+  );
+  /* Copied text fades out down the card rather than being cut off. */
+  --plop-text-fade: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0.12) 100%
+  );
+  --plop-on-card: #ffffff;
+
+  /* Opaque hover fill for list rows — a solid step, not a translucent wash. */
+  --plop-row-hover: #262626;
+
+  --plop-focus: 0 0 0 2px var(--plop-surface-solid), 0 0 0 4px var(--plop-accent);
+}
+
+.plop-root[data-theme="light"] {
+  --plop-surface-base: rgba(248, 248, 248, 0.94);
+  --plop-surface-solid: #f8f8f8;
+  --plop-surface-shade: radial-gradient(
+    98% 100% at 50% 0%,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+  --plop-surface-inset: inset 0 40px 10px -40px rgba(255, 255, 255, 0.9),
+    inset 0 -40px 10px -40px rgba(0, 0, 0, 0.06);
+  --plop-surface-shadow: 0 18px 24px rgba(0, 0, 0, 0.12);
+
+  --plop-sticky-top: linear-gradient(180deg, #f8f8f8 0%, rgba(248, 248, 248, 0) 100%);
+  --plop-sticky-bottom: linear-gradient(180deg, rgba(248, 248, 248, 0) 0%, #f8f8f8 100%);
+
+  --plop-control-bg: #efefef;
+  /* Brighter, not darker: on a light surface a neutral control lifts toward
+     white on hover. */
+  --plop-control-bg-hover: #fafafa;
+  --plop-control-border: rgba(0, 0, 0, 0.06);
+  --plop-card-bg: #efefef;
+  --plop-tile-bg: #d3d3d3;
+  --plop-empty-bg: #e6e6e6;
+  --plop-empty-border: rgba(12, 12, 12, 0.22);
+  --plop-glyph: #1e1e1e;
+  --plop-glyph-opacity: 0.64;
+
+  --plop-fill-subtle: rgba(30, 30, 30, 0.04);
+  --plop-fill: rgba(30, 30, 30, 0.08);
+  --plop-fill-strong: rgba(30, 30, 30, 0.1);
+
+  --plop-segmented-on: #ffffff;
+  --plop-segmented-on-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --plop-on-segmented: #1e1e1e;
+
+  --plop-text: #0c0c0c;
+  --plop-text-muted: rgba(12, 12, 12, 0.6);
+  --plop-text-faint: rgba(12, 12, 12, 0.44);
+  --plop-divider: rgba(12, 12, 12, 0.1);
+  --plop-track: rgba(12, 12, 12, 0.12);
+  --plop-track-active: rgba(12, 12, 12, 0.3);
+  --plop-switch-off: rgba(0, 0, 0, 0.2);
+  --plop-knob-glass: rgba(255, 255, 255, 0.72);
+
+  --plop-danger: #d81d1d;
+  --plop-danger-zone: rgba(216, 29, 29, 0.12);
+
+  /* A white ring is invisible on a light surface, so the edge inverts: the
+     flare is a dark hairline that still fades out toward both corners. */
+  --plop-edge-stops: rgba(12, 12, 12, 0.04) 10%, rgba(12, 12, 12, 0.26) 50%,
+    rgba(12, 12, 12, 0.04) 90%;
+  --plop-glow: inset 0 0 16px rgba(12, 12, 12, 0.08);
+
+  --plop-plate: linear-gradient(
+    180deg,
+    rgba(30, 30, 30, 0) 0%,
+    rgba(30, 30, 30, 0.64) 100%
+  );
+  --plop-plate-solid: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.86) 100%
+  );
+  --plop-text-fade: linear-gradient(
+    180deg,
+    #1e1e1e 0%,
+    rgba(30, 30, 30, 0.12) 100%
+  );
+  --plop-on-card: #1e1e1e;
+
+  --plop-row-hover: #e4e4e4;
+}
