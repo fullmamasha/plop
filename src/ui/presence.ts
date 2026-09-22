@@ -65,12 +65,16 @@ export function useDismiss(
       // opened the surface, replayed through a capture phase we joined late.
       if (event.timeStamp < attachedAt) return;
       const el = ref.current;
-      const target = event.target as Node | null;
+      if (!el) return;
+      // The path, not the target: on a real page Plop lives in a shadow root,
+      // and a listener on the window sees every press inside it retargeted to
+      // the shadow host — which is outside the surface, so every press used
+      // to close the widget before the button under it could act.
+      const path = event.composedPath();
+      if (path.includes(el)) return;
       // A press inside any Plop surface — including one in a different layer,
       // like the settings panel — is never "outside".
-      if (!el || !target) return;
-      if (el.contains(target)) return;
-      if ((target as Element).closest?.(".plop-surface")) return;
+      if (path.some((node) => (node as Element).classList?.contains("plop-surface"))) return;
       handler.current();
     };
 

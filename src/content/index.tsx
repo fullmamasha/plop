@@ -44,9 +44,53 @@ function resolveTheme(preference: PlopTheme | null): PlopTheme {
 
 /* ---------------------------------------------------------------------- */
 
-type Anchor = { input: HTMLInputElement; rect: DOMRect };
+type Anchor = { input: HTMLInputElement; rect: DOMRect; target: Element };
 
-function Plop({ host }: { host: string }) {
+/**
+ * Lifts Plop above everything else on the page, every time it opens.
+ *
+ * A z-index is not enough. A modal `<dialog>` or a popover lives in the
+ * browser's top layer, which paints over any z-index, and a modal dialog also
+ * makes everything outside itself inert — so on a site like LinkedIn, whose
+ * upload screen is a modal, Plop used to open *under* the modal's tint and
+ * ignore every click. Plop's host is therefore a popover, re-shown on each
+ * open so it lands above whatever joined the top layer since; and while a
+ * modal dialog is open it moves inside it, the only place a modal leaves
+ * interactive.
+ */
+function raise(root: HTMLElement, input: HTMLInputElement) {
+  const modal =
+    input.closest("dialog:modal") ?? [...document.querySelectorAll("dialog:modal")].pop();
+  const parent = modal ?? document.documentElement;
+  // Also puts the host back if a page removed the dialog it was in.
+  if (root.parentNode !== parent) parent.append(root);
+  if (root.matches(":popover-open")) root.hidePopover();
+  root.showPopover();
+}
+
+const hasBox = (el: Element) => {
+  const { width, height } = el.getBoundingClientRect();
+  return width > 0 && height > 0;
+};
+
+/** The last element pressed, while that press is recent enough to be the
+ *  one that led to this click. */
+let lastPress: { el: Element; at: number } | null = null;
+document.addEventListener(
+  "pointerdown",
+  (event) => {
+    if (event.isTrusted && event.target instanceof Element) {
+      lastPress = { el: event.target, at: performance.now() };
+    }
+  },
+  true
+);
+function recentPress(): Element | null {
+  if (!lastPress || performance.now() - lastPress.at > 1000) return null;
+  return lastPress.el.isConnected && hasBox(lastPress.el) ? lastPress.el : null;
+}
+
+function Plop({ root, site }: { root: HTMLElement; site: string }) {
   const [settings, setSettings] = useState<PlopSettings>(DEFAULT_SETTINGS);
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const [at, setAt] = useState<{ left: number; top: number } | null>(null);
@@ -72,8 +116,16 @@ function Plop({ host }: { host: string }) {
     void reload();
   }, [reload]);
 
-  const enabled = isEnabledOn(settings, host);
+  const enabled = isEnabledOn(settings, site);
   const close = useCallback(() => setAnchor(null), []);
+
+  // While open, the control that opened Plop also accepts a dragged card:
+  // dropping an item back onto the button you clicked is the obvious gesture.
+  useEffect(() => {
+    if (!anchor) return;
+    anchor.target.setAttribute("data-plop-dropzone", "");
+    return () => anchor.target.removeAttribute("data-plop-dropzone");
+  }, [anchor]);
 
   useEffect(() => {
     if (!enabled) setAnchor(null);
@@ -82,6 +134,16 @@ function Plop({ host }: { host: string }) {
   /** Parks the widget under the control, clamped to the viewport. */
   const place = useCallback((rect: DOMRect) => {
     const width = 440; // --plop-widget-width
+    // A control with no box — a hidden input a site clicked from script —
+    // gives nothing to sit under, so Plop opens in the middle of the screen
+    // like a dialog instead of in the corner.
+    if (!rect.width && !rect.height) {
+      setAt({
+        left: Math.max(12, (window.innerWidth - width) / 2),
+        top: Math.max(12, (window.innerHeight - 260) / 2),
+      });
+      return;
+    }
     const left = Math.min(
       Math.max(12, rect.left + rect.width / 2 - width / 2),
       Math.max(12, window.innerWidth - width - 12)
@@ -114,13 +176,16 @@ function Plop({ host }: { host: string }) {
       event.preventDefault();
       event.stopPropagation();
 
-      // Anchor to whatever the user actually clicked, since a hidden input
-      // has no useful box of its own.
-      const visible = target instanceof HTMLElement ? target : input;
-      const rect = visible.getBoundingClientRect();
-      const box = rect.width && rect.height ? rect : input.getBoundingClientRect();
-      setAnchor({ input, rect: box });
+      // Anchor to what the user actually pressed. When a site opens a hidden
+      // input from script, the click's target is that input, which has no
+      // box, so the element under the pointer a moment ago stands in for it.
+      const visible = hasBox(target) ? target : recentPress() ?? target;
+      const box = visible.getBoundingClientRect();
+      raise(root, input);
+      setAnchor({ input, rect: box, target: visible });
       place(box);
+      // Pins and recents change in other tabs and in the popup.
+      void reload();
 
       void readClipboard().then((result) => {
         setClipboard(result.ok ? result.items : []);
@@ -130,7 +195,7 @@ function Plop({ host }: { host: string }) {
 
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
-  }, [enabled, place]);
+  }, [enabled, place, reload, root]);
 
   /* ---- paste --------------------------------------------------------- */
 
@@ -211,7 +276,7 @@ function Plop({ host }: { host: string }) {
         onDrop={(item) => void deliver(item)}
         onTogglePin={togglePin}
         onBrowse={browse}
-        onOpenSettings={() => chrome.runtime.sendMessage({ type: "plop:open-options" })}
+        onOpenSettings={() => void chrome.runtime.sendMessage({ type: "plop:open-settings" })}
         onClose={close}
         exiting={widget.exiting}
       />
@@ -246,8 +311,13 @@ function mount() {
 
   const host = document.createElement("div");
   host.id = "plop-root";
-  // The host itself must not disturb the page's layout or hit-testing.
-  host.style.cssText = "all: initial; position: fixed; inset: 0 auto auto 0; z-index: 2147483647;";
+  // A manual popover so it can enter the top layer; see raise(). The inline
+  // reset also removes the browser's popover box (border, padding, canvas
+  // background), leaving a zero-size host that does not disturb the page's
+  // layout or hit-testing.
+  host.popover = "manual";
+  host.style.cssText =
+    "all: initial; position: fixed; inset: 0 auto auto 0; overflow: visible; z-index: 2147483647;";
   const shadow = host.attachShadow({ mode: "open" });
 
   const sheet = document.createElement("style");
@@ -260,8 +330,13 @@ function mount() {
   document.documentElement.append(host);
 
   void registerFont();
-  render(<Plop host={location.hostname} />, mountPoint);
+  render(<Plop root={host} site={location.hostname} />, mountPoint);
 }
+
+// The popup asks which site it is looking at; see popup/index.tsx.
+chrome.runtime.onMessage.addListener((message, _sender, respond) => {
+  if (message?.type === "plop:site") respond(location.hostname);
+});
 
 // `document_idle` already waits for the document, but a page can replace its
 // own body afterwards; mounting on the documentElement survives that.

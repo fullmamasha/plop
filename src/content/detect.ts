@@ -46,15 +46,18 @@ export function fileInputFor(target: Element): HTMLInputElement | null {
       const inside = usable(node.querySelector('input[type="file"]'));
       if (inside) return inside;
     }
-
-    // A button or wrapper with the input hidden inside it. Kept to a shallow
-    // look: a match further away than this is a guess, and guessing wrong
-    // means hijacking a control that was never an upload.
-    if (node instanceof HTMLElement && node !== target) {
-      const nested = usable(node.querySelector(':scope > input[type="file"]'));
-      if (nested) return nested;
-    }
   }
+
+  // Deliberately no search for an input "near" the target. A button that
+  // opens a hidden input does so by calling input.click(), and that click
+  // arrives here with the input itself as its target — so it is caught above
+  // without guessing. Guessing is what went wrong before: a look for a child
+  // input at every ancestor reached <body>, and on a page with a hidden
+  // input directly in <body> every click anywhere opened Plop.
+  //
+  // ponytail: input.showPicker() opens a dialog without dispatching a click,
+  // so those controls get the native dialog. Catching it would mean patching
+  // the page's own HTMLInputElement.prototype from its main world.
 
   return null;
 }

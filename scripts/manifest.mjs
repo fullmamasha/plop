@@ -39,7 +39,9 @@ export const manifest = {
       all_frames: false,
     },
   ],
-  permissions: ["storage", "clipboardRead"],
+  // unlimitedStorage: pinned files are kept in extension storage, whose
+  // default quota is 10 MB. It adds no install warning.
+  permissions: ["storage", "unlimitedStorage", "clipboardRead"],
   host_permissions: [],
   // The widget runs in a page's world, so its font has to be fetchable from
   // there. Nothing else is exposed.

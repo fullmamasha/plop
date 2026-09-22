@@ -2,12 +2,18 @@
 
 import type { PlopItem, PlopSettings } from "../src/types";
 
-import clipboardImg from "./samples/clipboard.jpg";
-import pin1 from "./samples/pin-1.jpg";
-import pin2 from "./samples/pin-2.jpg";
-import pin3 from "./samples/pin-3.jpg";
-import pin4 from "./samples/pin-4.jpg";
-import recentImg from "./samples/recent.jpg";
+/** A flat two-colour gradient standing in for a photo thumbnail. */
+const swatch = (from: string, to: string) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs><rect width="1" height="1" fill="url(#g)"/></svg>`
+  )}`;
+
+const clipboardImg = swatch("#4f7cff", "#1c2d6b");
+const pin1 = swatch("#f4a261", "#6a3d1f");
+const pin2 = swatch("#f7c6c7", "#b5646b");
+const pin3 = swatch("#c9d6df", "#52616b");
+const pin4 = swatch("#9b5de5", "#3a1f6b");
+const recentImg = swatch("#2ec4b6", "#0f4c47");
 
 const file = (
   id: string,
@@ -25,7 +31,7 @@ const file = (
 });
 
 export const clipboard: PlopItem[] = [
-  file("c1", "Fuckingpdr.json", 105_000, clipboardImg),
+  file("c1", "Quarterlyreport.json", 105_000, clipboardImg),
   {
     id: "c2",
     kind: "text",

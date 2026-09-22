@@ -2,9 +2,10 @@
  * Field test — a bare page with one upload control in the middle of it.
  *
  * No fixtures. Clicking the control reads the real system clipboard and shows
- * the widget over real recents and pins held in IndexedDB. This is the page to
- * open when the question is "does this actually work", as opposed to "does
- * this look right", which is what the gallery is for.
+ * the widget over real recents and pins, held in a stand-in for extension
+ * storage. This is the page to open when the question is "does this actually
+ * work", as opposed to "does this look right", which is what the gallery is
+ * for.
  */
 
 import "@fontsource-variable/inter";
@@ -12,6 +13,7 @@ import "../src/styles/tokens.css";
 import "../src/styles/glass.css";
 import "../src/styles/plop.css";
 import "./field-test.css";
+import "./chrome-storage";
 
 import { render } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";

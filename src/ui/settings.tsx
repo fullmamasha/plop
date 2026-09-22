@@ -181,7 +181,8 @@ export function SettingsPanel({
               : "Allow Plop to work on this website."
           }
           checked={siteEnabled}
-          disabled={!settings.enabledGlobally}
+          // No site means a page Plop does not run on: nothing to switch.
+          disabled={!settings.enabledGlobally || !site}
           onChange={onToggleSite}
         />
 

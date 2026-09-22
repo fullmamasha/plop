@@ -110,3 +110,41 @@ test("glass edge keeps the three conditions its rotation depends on", () => {
   //    interpolate, so the highlight cannot travel.
   assert.doesNotMatch(css, /linear-gradient\(\s*to\s+/);
 });
+
+test("pinned files survive a round trip through extension storage", async () => {
+  await import("../dev/chrome-storage.ts");
+  const store = await import("../src/storage.ts");
+
+  // Every byte value, so a lossy base64 step would show.
+  const bytes = Uint8Array.from({ length: 256 * 3 }, (_, i) => i % 256);
+  const file = new File([bytes], "photo.png", { type: "image/png", lastModified: 7 });
+  const item = {
+    id: "a", kind: "file", name: "photo.png", mimeType: "image/png",
+    size: file.size, file, createdAt: 1,
+  } as const;
+
+  assert.equal(await store.put("pinned", item), true);
+  await store.put("pinned", { id: "b", kind: "text", content: "hi", createdAt: 2 });
+
+  const [text, back] = await store.list("pinned");
+  assert.equal(text.id, "b", "newest first");
+  assert.ok(back.kind === "file" && back.file);
+  assert.deepEqual(new Uint8Array(await back.file.arrayBuffer()), bytes);
+  assert.equal(back.file.name, "photo.png");
+  assert.equal(back.file.type, "image/png");
+  assert.ok(back.preview?.startsWith("blob:"), "preview minted on read");
+
+  // Recents are kept separately: dropping one never touches a pin.
+  await store.put("recents", item);
+  await store.remove("recents", "a");
+  assert.equal((await store.list("pinned")).length, 2);
+
+  await store.trim("pinned", 1);
+  assert.deepEqual((await store.list("pinned")).map((i) => i.id), ["b"]);
+
+  assert.equal(
+    await store.put("pinned", { ...item, id: "big", size: store.MAX_STORED_BYTES + 1 }),
+    false,
+    "oversized files are uploaded but not kept"
+  );
+});

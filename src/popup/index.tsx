@@ -58,16 +58,19 @@ function Popup() {
       if (pending) setUpdate({ kind: "available", version: pending });
     });
 
+    // The popup cannot read the tab's address without an extra permission,
+    // so it asks Plop's own script on that page instead. No answer means a
+    // page Plop does not run on (chrome://, the Web Store), where there is no
+    // site switch to offer.
     void chrome.tabs
       ?.query({ active: true, currentWindow: true })
-      .then(([tab]) => {
-        if (!tab?.url) return;
-        try {
-          setSite(new URL(tab.url).hostname);
-        } catch {
-          /* a chrome:// or extension page has no host worth showing */
-        }
-      });
+      .then(([tab]) =>
+        tab?.id === undefined
+          ? undefined
+          : chrome.tabs.sendMessage<unknown, string>(tab.id, { type: "plop:site" })
+      )
+      .then((host) => host && setSite(host))
+      .catch(() => {});
   }, [reload]);
 
   const save = (next: PlopSettings) => {

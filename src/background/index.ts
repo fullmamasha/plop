@@ -41,12 +41,21 @@ export type UpdateStatus =
 
 type Message =
   | { type: "plop:check-update" }
-  | { type: "plop:apply-update" };
+  | { type: "plop:apply-update" }
+  | { type: "plop:open-settings" };
 
 chrome.runtime.onMessage.addListener((message: Message, _sender, respond) => {
   if (message.type === "plop:check-update") {
     void checkForUpdate().then(respond);
     return true; // keep the channel open for the async reply
+  }
+
+  if (message.type === "plop:open-settings") {
+    // The widget's gear opens the same settings as the toolbar button.
+    // openPopup exists from Chrome 127; on older versions the gear does
+    // nothing rather than failing.
+    void chrome.action.openPopup?.().catch(() => {});
+    return false;
   }
 
   if (message.type === "plop:apply-update") {
