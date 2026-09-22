@@ -4,6 +4,20 @@ All notable changes to Plop are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-09-22
+
+### Fixed
+
+- The widget's background blur did not blur the page behind it.
+- A card dragged out of Plop could only be dropped on the button that opened
+  it. It can now be dropped on any area of a page that accepts dropped files,
+  such as an email body or an attachment zone.
+- Uploading the same file or text again added another copy to recents. Plop
+  now recognises it by its content and moves the existing one to the front.
+  Pinning something already pinned does nothing, and pinned items no longer
+  also appear in recents. Copies saved by earlier versions are merged
+  automatically.
+
 ## [0.1.1] - 2026-09-22
 
 ### Fixed

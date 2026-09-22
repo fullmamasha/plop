@@ -70,7 +70,8 @@ export function PlopWidget({
   useDismiss(surface, onClose, !exiting);
 
   const dragger = useCardDrag(
-    (item, target) => (onDrop ? onDrop(item, target) : onPick(item))
+    (item, target, taken) =>
+      onDrop ? onDrop(item, target, taken) : taken || onPick(item)
   );
   // The pinned section shows a 2x2 cluster until it is opened out into the
   // full run of cards. `folding` keeps the run mounted for the length of the

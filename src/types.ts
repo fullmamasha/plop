@@ -110,3 +110,57 @@ export function glyphFor(item: PlopItem): GlyphName {
   if (type.startsWith("image/")) return "fileImage";
   return "file";
 }
+
+/* ---- identity by content ------------------------------------------------ */
+
+/**
+ * Every id Plop derives from content starts with this, which is also how
+ * stored items saved before content ids existed are recognised.
+ */
+export const CONTENT_ID_PREFIX = "h-";
+
+/**
+ * A 53-bit hash of some bytes (cyrb53). Not cryptographic, and it does not
+ * need to be: it only has to tell apart the few dozen files Plop keeps.
+ * `crypto.subtle` would be the obvious choice, but it is missing on plain
+ * http:// pages, where Plop also runs.
+ */
+export function hash53(bytes: Uint8Array): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < bytes.length; i += 1) {
+    h1 = Math.imul(h1 ^ bytes[i], 2654435761);
+    h2 = Math.imul(h2 ^ bytes[i], 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+}
+
+/** The id for this content: the same file or text always gets the same one,
+ *  whatever it is called and however many times it was copied. */
+export function contentIdFor(kind: PlopItem["kind"], bytes: Uint8Array): string {
+  return `${CONTENT_ID_PREFIX}${kind}-${bytes.length}-${hash53(bytes)}`;
+}
+
+/**
+ * The item with its id replaced by its content id. A file item without its
+ * bytes cannot be identified and comes back unchanged.
+ */
+export async function withContentId(item: PlopItem): Promise<PlopItem> {
+  if (item.kind === "text") {
+    return { ...item, id: contentIdFor("text", new TextEncoder().encode(item.content)) };
+  }
+  if (!item.file) return item;
+  return {
+    ...item,
+    id: contentIdFor("file", new Uint8Array(await item.file.arrayBuffer())),
+  };
+}
+
+/** `fresh` in front of `current`, dropping anything in `current` that is the
+ *  same content as something in `fresh`. */
+export function mergeNewestFirst(fresh: PlopItem[], current: PlopItem[]): PlopItem[] {
+  const seen = new Set(fresh.map((item) => item.id));
+  return [...fresh, ...current.filter((item) => !seen.has(item.id))];
+}

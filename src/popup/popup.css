@@ -42,7 +42,7 @@ body {
 
 /* Inside a popup there is nothing to float above, so the panel fills it. */
 .plop-panel {
-  filter: none;
+  box-shadow: none;
   border-radius: 0;
   max-height: 600px;
 }

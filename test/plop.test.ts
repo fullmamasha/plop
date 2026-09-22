@@ -119,16 +119,17 @@ test("pinned files survive a round trip through extension storage", async () => 
   const bytes = Uint8Array.from({ length: 256 * 3 }, (_, i) => i % 256);
   const file = new File([bytes], "photo.png", { type: "image/png", lastModified: 7 });
   const item = {
-    id: "a", kind: "file", name: "photo.png", mimeType: "image/png",
+    id: "temporary", kind: "file", name: "photo.png", mimeType: "image/png",
     size: file.size, file, createdAt: 1,
   } as const;
 
   assert.equal(await store.put("pinned", item), true);
-  await store.put("pinned", { id: "b", kind: "text", content: "hi", createdAt: 2 });
+  await store.put("pinned", { id: "t", kind: "text", content: "hi", createdAt: 2 });
 
   const [text, back] = await store.list("pinned");
-  assert.equal(text.id, "b", "newest first");
+  assert.ok(text.kind === "text", "newest first");
   assert.ok(back.kind === "file" && back.file);
+  assert.ok(back.id.startsWith("h-"), "stored under a content id, not the caller's");
   assert.deepEqual(new Uint8Array(await back.file.arrayBuffer()), bytes);
   assert.equal(back.file.name, "photo.png");
   assert.equal(back.file.type, "image/png");
@@ -136,15 +137,66 @@ test("pinned files survive a round trip through extension storage", async () => 
 
   // Recents are kept separately: dropping one never touches a pin.
   await store.put("recents", item);
-  await store.remove("recents", "a");
+  await store.remove("recents", back.id);
   assert.equal((await store.list("pinned")).length, 2);
 
   await store.trim("pinned", 1);
-  assert.deepEqual((await store.list("pinned")).map((i) => i.id), ["b"]);
+  assert.deepEqual((await store.list("pinned")).map((i) => i.kind), ["text"]);
 
   assert.equal(
-    await store.put("pinned", { ...item, id: "big", size: store.MAX_STORED_BYTES + 1 }),
+    await store.put("pinned", { ...item, size: store.MAX_STORED_BYTES + 1 }),
     false,
     "oversized files are uploaded but not kept"
   );
+});
+
+test("the same content is kept once, under its newest details", async () => {
+  await import("../dev/chrome-storage.ts");
+  const store = await import("../src/storage.ts");
+  const bytes = new Uint8Array([1, 2, 3, 4]);
+  const as = (name: string, createdAt: number) => ({
+    id: `clip-${createdAt}`, kind: "file" as const, name, mimeType: "image/png",
+    size: bytes.length, file: new File([bytes], name, { type: "image/png" }), createdAt,
+  });
+
+  // Same bytes three times, under different names and throwaway ids.
+  await store.put("recents", as("Clipboard.png", 10));
+  await store.put("recents", as("Clipboard.png", 20));
+  await store.put("recents", as("renamed.png", 30));
+  // Different bytes, same name: a different file.
+  await store.put("recents", { ...as("Clipboard.png", 40), file: new File([new Uint8Array([9])], "Clipboard.png"), size: 1 });
+
+  const items = await store.list("recents");
+  assert.equal(items.length, 2);
+  assert.equal(items[1].kind === "file" && items[1].name, "renamed.png");
+  assert.equal(items[1].createdAt, 30, "reusing a file moves it to the front");
+
+  await store.put("recents", { id: "x", kind: "text", content: "same", createdAt: 50 });
+  await store.put("recents", { id: "y", kind: "text", content: "same", createdAt: 60 });
+  assert.equal((await store.list("recents")).filter((i) => i.kind === "text").length, 1);
+});
+
+test("items saved before content ids are merged on first read", async () => {
+  await import("../dev/chrome-storage.ts");
+  const store = await import("../src/storage.ts");
+  const data = btoa(String.fromCharCode(5, 6, 7));
+  const row = (id: string, createdAt: number) =>
+    ({ id, kind: "file", name: `${id}.png`, mimeType: "image/png", size: 3, createdAt });
+
+  // The 0.1.1 layout: random ids, the same screenshot saved twice, plus a row
+  // whose bytes went missing.
+  await chrome.storage.local.set({
+    "plop:pinned": [row("old-b", 2), row("old-a", 1), row("lost", 0)],
+    "plop:pinned:file:old-a": { name: "old-a.png", type: "image/png", lastModified: 0, data },
+    "plop:pinned:file:old-b": { name: "old-b.png", type: "image/png", lastModified: 0, data },
+  });
+
+  const items = await store.list("pinned");
+  assert.equal(items.length, 1, "duplicates merged, the unrecoverable row dropped");
+  assert.ok(items[0].id.startsWith("h-"));
+  assert.equal(items[0].kind === "file" && items[0].name, "old-b.png", "newest details win");
+  const left = Object.keys(await chrome.storage.local.get([
+    "plop:pinned:file:old-a", "plop:pinned:file:old-b",
+  ]));
+  assert.deepEqual(left, [], "old file keys removed");
 });

@@ -69,7 +69,10 @@
   align-items: stretch;
   overflow: hidden;
   border-radius: var(--plop-radius-surface);
-  filter: drop-shadow(var(--plop-surface-shadow));
+  /* box-shadow, never filter: drop-shadow. A filter here makes the surface a
+     backdrop root, and the glass plate's backdrop-filter below would then
+     blur only the surface's own contents instead of the page behind it. */
+  box-shadow: var(--plop-surface-shadow);
 }
 
 /* The glass plate sits behind the content and bleeds half a pixel past the
@@ -1481,6 +1484,6 @@
   }
 
   .plop-surface {
-    filter: none;
+    box-shadow: none;
   }
 }

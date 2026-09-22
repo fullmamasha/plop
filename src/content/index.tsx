@@ -21,13 +21,14 @@ import plopCss from "../styles/plop.css?inline";
 
 import { PlopWidget } from "../ui/widget";
 import { usePresence } from "../ui/presence";
-import { itemsFromPaste, readClipboard } from "../clipboard";
+import { identify, itemsFromPaste, readClipboard } from "../clipboard";
 import * as store from "../storage";
 import { fileInputFor, isOutOfScope } from "./detect";
 import { DEFAULT_SETTINGS, onSettingsChanged, readSettings } from "../settings-store";
 import {
   fillFileInput,
   isEnabledOn,
+  mergeNewestFirst,
   type PlopItem,
   type PlopSettings,
   type PlopTheme,
@@ -205,7 +206,9 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
       const items = itemsFromPaste(event);
       if (!items.length) return;
       event.preventDefault();
-      setClipboard((current) => [...items, ...current]);
+      void identify(items).then((found) =>
+        setClipboard((current) => mergeNewestFirst(found, current))
+      );
       setClipboardNote(undefined);
     };
     window.addEventListener("paste", onPaste);
@@ -230,7 +233,8 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
   /* ---- actions -------------------------------------------------------- */
 
   const remember = async (item: PlopItem) => {
-    await store.put("recents", item);
+    // Used again means newest again: it moves to the front of recents.
+    await store.put("recents", { ...item, createdAt: Date.now() });
     await store.trim("recents", RECENTS_LIMIT);
     await reload();
   };
@@ -259,6 +263,8 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
 
   if (!widget.mounted || !at) return null;
 
+  const pinnedIds = new Set(pinned.map((p) => p.id));
+
   return (
     <div
       class="plop-root plop-layer"
@@ -268,12 +274,18 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
       <PlopWidget
         clipboard={clipboard}
         pinned={pinned}
-        recents={recents}
-        pinnedIds={new Set(pinned.map((p) => p.id))}
+        // A pinned file is one click away already; recents skip it.
+        recents={recents.filter((item) => !pinnedIds.has(item.id))}
+        pinnedIds={pinnedIds}
         clipboardEmpty={clipboard.length === 0}
         clipboardNote={clipboardNote}
         onPick={deliver}
-        onDrop={(item) => void deliver(item)}
+        onDrop={(item, _target, taken) => {
+          // Taken: the page accepted it as a drop of its own; only tidy up.
+          if (!taken) return void deliver(item);
+          close();
+          void remember(item);
+        }}
         onTogglePin={togglePin}
         onBrowse={browse}
         onOpenSettings={() => void chrome.runtime.sendMessage({ type: "plop:open-settings" })}

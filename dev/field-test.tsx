@@ -20,12 +20,13 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { PlopWidget } from "../src/ui/widget";
 import { SettingsPanel } from "../src/ui/settings";
 import { usePresence } from "../src/ui/presence";
-import { itemsFromPaste, readClipboard } from "../src/clipboard";
+import { identify, itemsFromPaste, readClipboard } from "../src/clipboard";
 import * as store from "../src/storage";
 import {
   canPreview,
   fillFileInput,
   isEnabledOn,
+  mergeNewestFirst,
   type PlopItem,
   type PlopSettings,
   type PlopTheme,
@@ -142,7 +143,8 @@ function FieldTest() {
   }, [enabled]);
 
   const remember = async (item: PlopItem) => {
-    await store.put("recents", item);
+    // Used again means newest again: it moves to the front of recents.
+    await store.put("recents", { ...item, createdAt: Date.now() });
     await store.trim("recents", RECENTS_LIMIT);
     await reload();
   };
@@ -172,7 +174,9 @@ function FieldTest() {
       const items = itemsFromPaste(event);
       if (!items.length) return;
       event.preventDefault();
-      setClipboard((current) => [...items, ...current]);
+      void identify(items).then((found) =>
+        setClipboard((current) => mergeNewestFirst(found, current))
+      );
       setNote(null);
     };
     window.addEventListener("paste", onPaste);
@@ -184,6 +188,8 @@ function FieldTest() {
     else await store.put("pinned", item);
     await reload();
   };
+
+  const pinnedIds = new Set(pinned.map((p) => p.id));
 
   return (
     <main class="page">
@@ -275,8 +281,9 @@ function FieldTest() {
           <PlopWidget
             clipboard={clipboard}
             pinned={pinned}
-            recents={recents}
-            pinnedIds={new Set(pinned.map((p) => p.id))}
+            // A pinned file is one click away already; recents skip it.
+            recents={recents.filter((item) => !pinnedIds.has(item.id))}
+            pinnedIds={pinnedIds}
             onPick={deliver}
             onDrop={(item, target) => {
               if (target.closest(".drop") || target === input.current) {

@@ -13,12 +13,21 @@
  * collection is an index of metadata plus one key per file, so listing and
  * deleting never rewrite every file.
  *
+ * Items are keyed by their content (see withContentId), so saving the same
+ * file or text again replaces the earlier entry instead of adding a copy.
+ *
  * ponytail: the index is read-modify-written, so two tabs pinning in the same
  * instant can drop one write. Fine for a user clicking; move to per-item keys
  * with a scan if it ever matters.
  */
 
-import { canPreview, type PlopItem } from "./types.ts";
+import {
+  canPreview,
+  CONTENT_ID_PREFIX,
+  contentIdFor,
+  withContentId,
+  type PlopItem,
+} from "./types.ts";
 
 export type Collection = "pinned" | "recents";
 
@@ -67,6 +76,16 @@ export function fromBase64(data: string): Uint8Array {
 /** Newest first. Previews are minted here, in the document that shows them. */
 export async function list(collection: Collection): Promise<PlopItem[]> {
   const rows = await readIndex(collection);
+  // Saved before ids came from content: re-save under content ids once,
+  // which also merges the duplicates those versions piled up.
+  if (rows.some((row) => !row.id.startsWith(CONTENT_ID_PREFIX))) {
+    await rekey(collection, await load(collection, rows));
+    return list(collection);
+  }
+  return load(collection, rows);
+}
+
+async function load(collection: Collection, rows: Row[]): Promise<PlopItem[]> {
   const keys = rows.filter((r) => r.kind === "file").map((r) => fileKey(collection, r.id));
   const files = keys.length ? await chrome.storage.local.get(keys) : {};
 
@@ -86,31 +105,50 @@ export async function list(collection: Collection): Promise<PlopItem[]> {
   });
 }
 
-/** Adds or replaces an item. Returns false if the file is too large to keep. */
+/**
+ * Adds an item, or refreshes the entry already holding the same content.
+ * Returns false if the file is too large to keep, or has no bytes to keep.
+ */
 export async function put(collection: Collection, item: PlopItem): Promise<boolean> {
-  const rows = (await readIndex(collection)).filter((r) => r.id !== item.id);
-
   if (item.kind === "file") {
-    if (item.size > MAX_STORED_BYTES) return false;
+    if (item.size > MAX_STORED_BYTES || !item.file) return false;
+    const { file, preview: _preview, ...rest } = item;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    // The id is recomputed here rather than trusted, so no caller can store
+    // a duplicate by passing an item that was never identified.
+    const row = { ...rest, id: contentIdFor("file", bytes) };
     // An object URL belongs to the document that made it, so it is never stored.
-    const { file, preview: _preview, ...row } = item;
-    if (file) {
-      const stored: StoredFile = {
-        name: file.name,
-        type: file.type,
-        lastModified: file.lastModified,
-        data: toBase64(new Uint8Array(await file.arrayBuffer())),
-      };
-      await chrome.storage.local.set({ [fileKey(collection, item.id)]: stored });
-    }
-    rows.push(row);
+    const stored: StoredFile = {
+      name: file.name,
+      type: file.type,
+      lastModified: file.lastModified,
+      data: toBase64(bytes),
+    };
+    await chrome.storage.local.set({ [fileKey(collection, row.id)]: stored });
+    await upsert(collection, row);
   } else {
-    rows.push(item);
+    await upsert(collection, (await withContentId(item)) as Row);
   }
+  return true;
+}
+
+async function upsert(collection: Collection, row: Row) {
+  const rows = (await readIndex(collection)).filter((r) => r.id !== row.id);
+  rows.push(row);
 
   rows.sort((a, b) => b.createdAt - a.createdAt);
   await writeIndex(collection, rows);
-  return true;
+}
+
+/** Clears a collection and saves `items` back through put, oldest first, so
+ *  where two share content the newer one's details win. */
+async function rekey(collection: Collection, items: PlopItem[]) {
+  const rows = await readIndex(collection);
+  await writeIndex(collection, []);
+  await chrome.storage.local.remove(rows.map((r) => fileKey(collection, r.id)));
+  for (const item of [...items].sort((a, b) => a.createdAt - b.createdAt)) {
+    await put(collection, item);
+  }
 }
 
 export async function remove(collection: Collection, id: string) {

@@ -17,7 +17,7 @@
  * for everything else.
  */
 
-import { canPreview, type PlopItem } from "./types";
+import { canPreview, withContentId, type PlopItem } from "./types";
 
 export type ClipboardResult =
   | { ok: true; items: PlopItem[] }
@@ -51,7 +51,14 @@ function textItem(content: string): PlopItem {
   };
 }
 
-/** Items from a paste event — any file type, because these are real Files. */
+/** Gives each item its content id, so the same thing copied twice is one item. */
+export const identify = (items: PlopItem[]) => Promise.all(items.map(withContentId));
+
+/**
+ * Items from a paste event — any file type, because these are real Files.
+ * Synchronous, so the caller can still cancel the paste; the ids here are
+ * temporary until the items go through `identify`.
+ */
 export function itemsFromPaste(event: ClipboardEvent): PlopItem[] {
   const data = event.clipboardData;
   if (!data) return [];
@@ -109,7 +116,7 @@ export async function readClipboard(): Promise<ClipboardResult> {
   }
 
   return items.length
-    ? { ok: true, items }
+    ? { ok: true, items: await identify(items) }
     : {
         ok: false,
         reason:

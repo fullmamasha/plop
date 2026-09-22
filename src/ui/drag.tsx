@@ -13,8 +13,8 @@
  * NOTE: the ghost is `position: fixed`, which is only free of the surface's
  * clipping while no ancestor of `.plop-root` sets `transform`, `filter` or
  * `backdrop-filter` — those make a containing block for fixed children. The
- * surface does set `filter`, which is why the ghost is a sibling of it rather
- * than a child.
+ * surface animates `transform` as it appears, which is why the ghost is a
+ * sibling of it rather than a child.
  */
 
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -28,9 +28,47 @@ const RETURN_MS = 320;
 /** Anything the host page marks, plus real file inputs. */
 const DROP_SELECTOR = '[data-plop-dropzone], input[type="file"]';
 
-/** The element the item was released on comes along: the caller decides what
- *  a given kind of target does with it. */
-export type DropHandler = (item: PlopItem, target: Element) => void;
+/**
+ * The element the item was released on comes along: the caller decides what
+ * a given kind of target does with it. `taken` is true when the page already
+ * accepted the file as a drop of its own (see dropOnPage), so the caller must
+ * not deliver it a second time.
+ */
+export type DropHandler = (item: PlopItem, target: Element, taken: boolean) => void;
+
+/**
+ * Hands a file to whatever the page has under the pointer, the way a file
+ * dragged in from the desktop arrives: dragenter, dragover, drop, carrying
+ * the file in a DataTransfer.
+ *
+ * Plop's own drag is drawn by Plop, not by the browser, so without this a
+ * site's drop zone — a message body, an attachment area — never hears about
+ * it. A page that takes a drop calls preventDefault on it (otherwise the
+ * browser would open the file), which is how Plop knows it landed.
+ *
+ * ponytail: the events arrive only on release, so a drop zone that lights up
+ * on hover does not light up while carrying. Dispatch dragover from the move
+ * handler if that is wanted.
+ */
+function dropOnPage(el: Element, file: File, x: number, y: number): boolean {
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  const fire = (type: string) =>
+    el.dispatchEvent(
+      new DragEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+        clientX: x,
+        clientY: y,
+        dataTransfer,
+      })
+    );
+  fire("dragenter");
+  fire("dragover");
+  // dispatchEvent returns false when a listener called preventDefault.
+  return !fire("drop");
+}
 
 export type DragState = {
   item: PlopItem;
@@ -78,7 +116,21 @@ export function useCardDrag(onDrop: DropHandler) {
       const under = document.elementFromPoint(event.clientX, event.clientY);
       const target = under?.closest(DROP_SELECTOR);
       if (target) {
-        drop.current(s.item, target);
+        drop.current(s.item, target, false);
+        setDrag(null);
+        return;
+      }
+
+      // Anywhere else on the page: offer the file as a real drop. Released
+      // over Plop itself, `under` is Plop's own host, which is not a target.
+      if (
+        under &&
+        !under.closest("#plop-root") &&
+        s.item.kind === "file" &&
+        s.item.file &&
+        dropOnPage(under, s.item.file, event.clientX, event.clientY)
+      ) {
+        drop.current(s.item, under, true);
         setDrag(null);
         return;
       }
