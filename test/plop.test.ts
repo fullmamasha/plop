@@ -200,3 +200,19 @@ test("items saved before content ids are merged on first read", async () => {
   ]));
   assert.deepEqual(left, [], "old file keys removed");
 });
+
+test("a file input's accept list decides what Plop may hand it", async () => {
+  const { accepts, textAsFile } = await import("../src/deliver.ts");
+  const input = (accept: string) => ({ accept }) as HTMLInputElement;
+  const png = new File([], "shot.png", { type: "image/png" });
+  const text = textAsFile("hello");
+
+  assert.equal(text.name, "Clipboard.txt");
+  assert.equal(accepts(input(""), text), true, "no accept list takes anything");
+  assert.equal(accepts(input("image/*"), png), true);
+  assert.equal(accepts(input("image/*"), text), false);
+  assert.equal(accepts(input(".pdf, .TXT"), text), true, "extensions, any case, spaced");
+  assert.equal(accepts(input("text/plain"), text), true);
+  assert.equal(accepts(input("image/png,image/webp"), png), true);
+  assert.equal(accepts(input("image/webp"), png), false);
+});

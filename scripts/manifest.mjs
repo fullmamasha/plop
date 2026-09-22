@@ -43,6 +43,15 @@ export const manifest = {
   // default quota is 10 MB. It adds no install warning.
   permissions: ["storage", "unlimitedStorage", "clipboardRead"],
   host_permissions: [],
+  // Opens Plop at the pointer for whatever field has focus. People can change
+  // the keys at chrome://extensions/shortcuts; Chrome leaves a suggestion
+  // unassigned if it clashes with one already taken.
+  commands: {
+    "open-plop": {
+      suggested_key: { default: "Ctrl+Shift+Space", mac: "Command+Shift+Space" },
+      description: "Open Plop at the pointer",
+    },
+  },
   // The widget runs in a page's world, so its font has to be fetchable from
   // there. Nothing else is exposed.
   web_accessible_resources: [

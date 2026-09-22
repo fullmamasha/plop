@@ -1,6 +1,6 @@
 {
   "name": "plop",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "private": true,
   "description": "A polished clipboard-first file upload extension for the web.",
   "license": "MIT",

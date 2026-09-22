@@ -24,9 +24,10 @@ import { usePresence } from "../ui/presence";
 import { identify, itemsFromPaste, readClipboard } from "../clipboard";
 import * as store from "../storage";
 import { fileInputFor, isOutOfScope } from "./detect";
+import { deliverTo, isEditable, isFileInput, saveCaret } from "../deliver";
 import { DEFAULT_SETTINGS, onSettingsChanged, readSettings } from "../settings-store";
 import {
-  fillFileInput,
+  canPreview,
   isEnabledOn,
   mergeNewestFirst,
   type PlopItem,
@@ -45,7 +46,40 @@ function resolveTheme(preference: PlopTheme | null): PlopTheme {
 
 /* ---------------------------------------------------------------------- */
 
-type Anchor = { input: HTMLInputElement; rect: DOMRect; target: Element };
+type Anchor = {
+  /** Where a picked item goes: a file input, a text field, or (opened with
+   *  the shortcut over nothing in particular) nowhere until a drag says. */
+  target: HTMLElement | null;
+  /** The file input an upload click was for. Select from PC hands the click
+   *  back to it; without one, Plop opens a file dialog of its own. */
+  input: HTMLInputElement | null;
+  /** The box Plop sits under. */
+  rect: DOMRect;
+  /** What the user pressed to open Plop, which also accepts a dropped card. */
+  pressed: Element | null;
+  /** Puts the caret back in a text field after clicks inside Plop moved it. */
+  restoreCaret?: () => void;
+};
+
+/** Set by the mounted widget; the shortcut message calls it. */
+let summon: (() => void) | null = null;
+
+/** Where the pointer last was, so the shortcut can open Plop beside it. */
+let pointer: { x: number; y: number } | null = null;
+document.addEventListener(
+  "pointermove",
+  (event) => {
+    pointer = { x: event.clientX, y: event.clientY };
+  },
+  { capture: true, passive: true }
+);
+
+/** The focused element, looking inside shadow roots on the way down. */
+function deepActiveElement(): Element | null {
+  let el = document.activeElement;
+  while (el?.shadowRoot?.activeElement) el = el.shadowRoot.activeElement;
+  return el;
+}
 
 /**
  * Lifts Plop above everything else on the page, every time it opens.
@@ -59,9 +93,9 @@ type Anchor = { input: HTMLInputElement; rect: DOMRect; target: Element };
  * modal dialog is open it moves inside it, the only place a modal leaves
  * interactive.
  */
-function raise(root: HTMLElement, input: HTMLInputElement) {
+function raise(root: HTMLElement, near: Element | null) {
   const modal =
-    input.closest("dialog:modal") ?? [...document.querySelectorAll("dialog:modal")].pop();
+    near?.closest("dialog:modal") ?? [...document.querySelectorAll("dialog:modal")].pop();
   const parent = modal ?? document.documentElement;
   // Also puts the host back if a page removed the dialog it was in.
   if (root.parentNode !== parent) parent.append(root);
@@ -99,7 +133,10 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
   const [clipboardNote, setClipboardNote] = useState<string | undefined>();
   const [recents, setRecents] = useState<PlopItem[]>([]);
   const [pinned, setPinned] = useState<PlopItem[]>([]);
+  /** Why the last pick did not go through, e.g. a field that takes no files. */
+  const [note, setNote] = useState<string | undefined>();
   const widget = usePresence(anchor !== null);
+  const picker = useRef<HTMLInputElement>(null);
   // Set while Plop deliberately lets one click through to the native dialog.
   const passthrough = useRef<HTMLInputElement | null>(null);
 
@@ -123,10 +160,34 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
   // While open, the control that opened Plop also accepts a dragged card:
   // dropping an item back onto the button you clicked is the obvious gesture.
   useEffect(() => {
-    if (!anchor) return;
-    anchor.target.setAttribute("data-plop-dropzone", "");
-    return () => anchor.target.removeAttribute("data-plop-dropzone");
+    const pressed = anchor?.pressed;
+    if (!pressed) return;
+    pressed.setAttribute("data-plop-dropzone", "");
+    return () => pressed.removeAttribute("data-plop-dropzone");
   }, [anchor]);
+
+  // A note belongs to the moment it explains.
+  useEffect(() => {
+    if (!note) return;
+    const timer = setTimeout(() => setNote(undefined), 4000);
+    return () => clearTimeout(timer);
+  }, [note]);
+
+  /** Opens Plop for `next`: above everything, fresh lists, clipboard read. */
+  const open = useCallback(
+    (next: Anchor) => {
+      raise(root, next.target ?? next.pressed);
+      setNote(undefined);
+      setAnchor(next);
+      // Pins and recents change in other tabs and in the popup.
+      void reload();
+      void readClipboard().then((result) => {
+        setClipboard(result.ok ? result.items : []);
+        setClipboardNote(result.ok ? undefined : result.reason);
+      });
+    },
+    [reload, root]
+  );
 
   useEffect(() => {
     if (!enabled) setAnchor(null);
@@ -181,28 +242,51 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
       // input from script, the click's target is that input, which has no
       // box, so the element under the pointer a moment ago stands in for it.
       const visible = hasBox(target) ? target : recentPress() ?? target;
-      const box = visible.getBoundingClientRect();
-      raise(root, input);
-      setAnchor({ input, rect: box, target: visible });
-      place(box);
-      // Pins and recents change in other tabs and in the popup.
-      void reload();
-
-      void readClipboard().then((result) => {
-        setClipboard(result.ok ? result.items : []);
-        setClipboardNote(result.ok ? undefined : result.reason);
-      });
+      const rect = visible.getBoundingClientRect();
+      open({ target: input, input, rect, pressed: visible });
+      place(rect);
     };
 
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
-  }, [enabled, place, reload, root]);
+  }, [enabled, place, open]);
+
+  /* ---- the shortcut --------------------------------------------------- */
+
+  // Opens Plop at the pointer for whatever field has focus: text goes in at
+  // its caret, files go in as a paste would. With nothing focused, cards can
+  // still be dragged onto any field.
+  useEffect(() => {
+    summon = () => {
+      if (!enabled) return;
+      const active = deepActiveElement();
+      const target = isFileInput(active) || isEditable(active) ? active : null;
+      const rect = pointer
+        ? new DOMRect(pointer.x, pointer.y, 1, 1)
+        : new DOMRect(0, 0, 0, 0); // no pointer yet: the middle of the screen
+      open({
+        target,
+        input: isFileInput(target) ? target : null,
+        rect,
+        pressed: null,
+        restoreCaret: target && isEditable(target) ? saveCaret(target) : undefined,
+      });
+      place(rect);
+    };
+    return () => {
+      summon = null;
+    };
+  }, [enabled, open, place]);
 
   /* ---- paste --------------------------------------------------------- */
 
   useEffect(() => {
     if (!anchor) return;
     const onPaste = (event: ClipboardEvent) => {
+      // Pasting into the field Plop is working for is the user typing, not a
+      // hand-off to Plop.
+      const typing = anchor.target && isEditable(anchor.target);
+      if (typing && deepActiveElement() === anchor.target) return;
       const items = itemsFromPaste(event);
       if (!items.length) return;
       event.preventDefault();
@@ -219,9 +303,10 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
 
   useEffect(() => {
     if (!anchor) return;
-    const reposition = () => place(anchor.input.getBoundingClientRect().width
-      ? anchor.input.getBoundingClientRect()
-      : anchor.rect);
+    // Follows the control it opened under as the page scrolls; opened at the
+    // pointer, it stays where it appeared.
+    const reposition = () =>
+      place(anchor.pressed && hasBox(anchor.pressed) ? anchor.pressed.getBoundingClientRect() : anchor.rect);
     window.addEventListener("resize", reposition);
     window.addEventListener("scroll", reposition, true);
     return () => {
@@ -240,19 +325,41 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
   };
 
   const deliver = async (item: PlopItem) => {
-    if (!anchor || item.kind !== "file" || !item.file) return;
-    fillFileInput(anchor.input, [item.file]);
+    if (!anchor) return;
+    const result = deliverTo(anchor.target, item, anchor.restoreCaret);
+    if (!result.ok) return setNote(result.reason);
     close();
     await remember(item);
   };
 
   const browse = () => {
     if (!anchor) return;
-    // Hand the click back to the page: Plop steps aside for exactly one.
-    passthrough.current = anchor.input;
     const input = anchor.input;
+    if (!input) return picker.current?.click();
+    // Hand the click back to the page: Plop steps aside for exactly one.
+    passthrough.current = input;
     close();
     input.click();
+  };
+
+  /** Files chosen in Plop's own dialog go where a picked card would; with no
+   *  field to go to, they join the clipboard row, ready to be dragged. */
+  const picked = async (files: File[]) => {
+    const items = await identify(
+      files.map((file) => ({
+        id: "",
+        kind: "file" as const,
+        name: file.name,
+        mimeType: file.type,
+        size: file.size,
+        preview: canPreview(file.type) ? URL.createObjectURL(file) : undefined,
+        file,
+        createdAt: Date.now(),
+      }))
+    );
+    if (!items.length) return;
+    if (anchor?.target) return deliver(items[0]);
+    setClipboard((current) => mergeNewestFirst(items, current));
   };
 
   const togglePin = async (item: PlopItem) => {
@@ -279,7 +386,8 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
         pinnedIds={pinnedIds}
         clipboardEmpty={clipboard.length === 0}
         clipboardNote={clipboardNote}
-        onPick={deliver}
+        note={note}
+        onPick={(item) => void deliver(item)}
         onDrop={(item, _target, taken) => {
           // Taken: the page accepted it as a drop of its own; only tidy up.
           if (!taken) return void deliver(item);
@@ -291,6 +399,16 @@ function Plop({ root, site }: { root: HTMLElement; site: string }) {
         onOpenSettings={() => void chrome.runtime.sendMessage({ type: "plop:open-settings" })}
         onClose={close}
         exiting={widget.exiting}
+      />
+      <input
+        ref={picker}
+        type="file"
+        multiple
+        hidden
+        onChange={(event) => {
+          void picked([...(event.currentTarget.files ?? [])]);
+          event.currentTarget.value = "";
+        }}
       />
     </div>
   );
@@ -348,6 +466,7 @@ function mount() {
 // The popup asks which site it is looking at; see popup/index.tsx.
 chrome.runtime.onMessage.addListener((message, _sender, respond) => {
   if (message?.type === "plop:site") respond(location.hostname);
+  if (message?.type === "plop:summon") summon?.();
 });
 
 // `document_idle` already waits for the document, but a page can replace its

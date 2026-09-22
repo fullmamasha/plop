@@ -198,6 +198,32 @@
   padding: var(--plop-space-7) 0 var(--plop-space-8);
 }
 
+/* A one-line explanation when a pick cannot go where Plop was asked to put
+   it. It floats over the foot of the surface, where the scrollbar sits, so
+   the widget keeps its designed height. */
+.plop-widget__note {
+  position: absolute;
+  inset: auto var(--plop-space-8) var(--plop-space-4);
+  margin: 0;
+  padding: var(--plop-space-2) var(--plop-space-5);
+  border-radius: var(--plop-radius-pill);
+  background: var(--plop-control-bg);
+  border: 1px solid var(--plop-control-border);
+  color: var(--plop-text);
+  font-size: var(--plop-meta-size);
+  font-weight: var(--plop-meta-weight);
+  letter-spacing: var(--plop-meta-tracking);
+  text-align: center;
+  animation: plop-note-in var(--plop-dur-base) var(--plop-ease-out);
+}
+
+@keyframes plop-note-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
 .plop-rail {
   display: flex;
   gap: var(--plop-space-7);

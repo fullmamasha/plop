@@ -21,6 +21,14 @@ function pasteShortcut(): string {
   return mac ? "⌘V" : "Ctrl+V";
 }
 
+/**
+ * Focuses an element once, when it mounts. A module-level function on
+ * purpose: Preact re-runs a ref whenever its identity changes, so an inline
+ * arrow would grab focus again on every render, including the one that closes
+ * Plop after it has put the caret back in the page's field.
+ */
+const focusOnMount = (el: HTMLElement | null) => el?.focus({ preventScroll: true });
+
 /** Collapse timing, kept in step with the `plop-fold` keyframes in plop.css. */
 const FOLD_MS = 220;
 const FOLD_STAGGER_MS = 24;
@@ -48,6 +56,8 @@ export type WidgetProps = {
   clipboardEmpty?: boolean;
   /** Shown under the paste hint, e.g. a permission refusal. */
   clipboardNote?: string;
+  /** Why the last pick did not go through, shown over the foot of the rail. */
+  note?: string;
 };
 
 export function PlopWidget({
@@ -64,6 +74,7 @@ export function PlopWidget({
   exiting = false,
   clipboardEmpty = false,
   clipboardNote,
+  note,
 }: WidgetProps) {
   const surface = useRef<HTMLDivElement>(null);
   // Pressing anywhere off the widget, or Escape, puts it away.
@@ -161,7 +172,7 @@ export function PlopWidget({
                   type="button"
                   class="plop-empty-card"
                   title={clipboardNote}
-                  ref={(el) => el?.focus({ preventScroll: true })}
+                  ref={focusOnMount}
                 >
                   <span class="plop-empty-card__key">{pasteShortcut()}</span>
                   <span class="plop-empty-card__hint">To paste file</span>
@@ -230,6 +241,12 @@ export function PlopWidget({
           )}
         </Rail>
       </div>
+
+      {note && (
+        <p class="plop-widget__note" role="status">
+          {note}
+        </p>
+      )}
     </div>
 
     <DragGhost drag={dragger.drag}>

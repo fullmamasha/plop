@@ -4,6 +4,27 @@ All notable changes to Plop are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-09-22
+
+### Added
+
+- A keyboard shortcut, Ctrl+Shift+Space (⌘+Shift+Space on a Mac), opens Plop
+  at the pointer. Picking an item puts it into whatever field has focus: text
+  is typed in at the caret, and files go in as a paste would. With nothing
+  focused, items can be dragged onto any field. The keys can be changed at
+  chrome://extensions/shortcuts.
+- Copied text can be uploaded: picked for an upload field, it arrives as
+  Clipboard.txt.
+- A text item dragged onto a text field or editor is typed in where it is
+  dropped.
+- Select from PC works when Plop was opened with the shortcut: the chosen file
+  goes into the focused field, or joins the clipboard row to be dragged.
+
+### Changed
+
+- Plop respects an upload field's list of accepted file types, and says so
+  instead of handing over a file the site would reject.
+
 ## [0.1.2] - 2026-09-22
 
 ### Fixed

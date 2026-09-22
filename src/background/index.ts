@@ -32,6 +32,14 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
   else await reconcilePendingUpdate();
 });
 
+/** The keyboard shortcut: the page's own Plop opens itself at the pointer.
+ *  Pages Plop does not run on (chrome://, the Web Store) have no one to
+ *  answer, which is fine. */
+chrome.commands.onCommand.addListener((command, tab) => {
+  if (command !== "open-plop" || tab?.id === undefined) return;
+  void chrome.tabs.sendMessage(tab.id, { type: "plop:summon" }).catch(() => {});
+});
+
 /* ---------------------------------------------------------------------- */
 
 export type UpdateStatus =

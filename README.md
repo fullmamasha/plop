@@ -23,7 +23,13 @@ one click away when you need it.
 - **Pinned files.** Keep the files you send often and reuse them without
   opening a dialog.
 - **Recents.** The last dozen files you uploaded, ready to send again.
-- **Drag out.** Pick an item up and drop it on the upload field.
+- **Drag out.** Pick an item up and drop it on the upload field, on any
+  area of a page that accepts dropped files, or into a text field.
+- **Text too.** Copied text uploads as `Clipboard.txt`, or goes straight
+  into a text field.
+- **Shortcut.** Ctrl+Shift+Space (⌘+Shift+Space on a Mac) opens Plop at the
+  pointer, for whatever field has focus. Change the keys at
+  `chrome://extensions/shortcuts`.
 - **Per-site control.** Turn Plop off on a site that does not suit it, or
   everywhere, from the extensions menu.
 - **Dark and light.** Follows the system, or pick one.

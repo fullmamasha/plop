@@ -19,6 +19,7 @@
 
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { PlopItem } from "../types";
+import { caretAtPoint, editableAt, insertText } from "../deliver";
 
 /** Pointer travel before a press becomes a drag rather than a click. */
 const DRAG_THRESHOLD = 6;
@@ -119,6 +120,17 @@ export function useCardDrag(onDrop: DropHandler) {
         drop.current(s.item, target, false);
         setDrag(null);
         return;
+      }
+
+      // Text released on a field is typed in where it landed.
+      const field = editableAt(under);
+      if (s.item.kind === "text" && field && !field.closest("#plop-root")) {
+        caretAtPoint(field, event.clientX, event.clientY);
+        if (insertText(field, s.item.content)) {
+          drop.current(s.item, field, true);
+          setDrag(null);
+          return;
+        }
       }
 
       // Anywhere else on the page: offer the file as a real drop. Released
