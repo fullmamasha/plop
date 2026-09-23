@@ -2,9 +2,10 @@
 
 A clipboard-first file upload extension for Chrome.
 
-![Plop: uploads, but better.](docs/cover.webp)
+[![Plop: uploads, but better.](docs/cover.webp)](https://www.youtube.com/watch?v=A1naeY_1L5o)
 
 **[Add to Chrome](https://chromewebstore.google.com/detail/plop/jniimldgfeajnpmhmoafbkmnkdlfoimn)**
+· [Preview](https://www.youtube.com/watch?v=A1naeY_1L5o)
 · [Website](https://fullmamasha.github.io/plop/)
 · [Privacy policy](https://fullmamasha.github.io/plop/privacy/)
 
