@@ -1,0 +1,45 @@
+name: Bug report
+description: Something in Plop does not work
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. A site where it goes wrong is the single
+        most useful thing you can give, since most bugs are about how one
+        particular page asks for a file.
+  - type: input
+    id: site
+    attributes:
+      label: Where does it happen?
+      description: The site and, if you can, the page. "Everywhere" is an answer too.
+      placeholder: linkedin.com, the post composer
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, what you got instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Plop version
+      description: Shown at the top of Plop's settings, in the extensions menu.
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: chrome
+    attributes:
+      label: Browser and system
+      placeholder: Chrome 141 on Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots or a screen recording help a great deal. Errors from the Plop card in chrome://extensions help even more.

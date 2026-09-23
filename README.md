@@ -1,39 +1,49 @@
 # Plop
 
-A clipboard-first file upload extension for Chrome.
+**Uploads, but better.** Clicking an upload button on a website normally hands
+you the operating system's file dialog. Plop opens instead, offering what you
+just copied, the files you pinned, and what you uploaded recently. The system
+dialog is still one click away when you need it.
 
-[![Plop: uploads, but better.](docs/cover.webp)](https://www.youtube.com/watch?v=A1naeY_1L5o)
+[![Build](https://github.com/fullmamasha/plop/actions/workflows/ci.yml/badge.svg)](https://github.com/fullmamasha/plop/actions/workflows/ci.yml)
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/jniimldgfeajnpmhmoafbkmnkdlfoimn?label=chrome%20web%20store)](https://chromewebstore.google.com/detail/plop/jniimldgfeajnpmhmoafbkmnkdlfoimn)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 **[Add to Chrome](https://chromewebstore.google.com/detail/plop/jniimldgfeajnpmhmoafbkmnkdlfoimn)**
-· [Preview](https://www.youtube.com/watch?v=A1naeY_1L5o)
+· [Watch the preview](https://www.youtube.com/watch?v=A1naeY_1L5o)
 · [Website](https://fullmamasha.github.io/plop/)
 · [Privacy policy](https://fullmamasha.github.io/plop/privacy/)
 
-Clicking an upload button on a website normally hands you the operating
-system's file dialog. Plop opens instead, offering what you just copied, the
-files you pinned, and what you uploaded recently. The system dialog is still
-one click away when you need it.
+[![Plop uploading a copied image to a LinkedIn post](docs/demo.gif)](https://www.youtube.com/watch?v=A1naeY_1L5o)
 
-## Features
+## What it does
 
-- **Clipboard first.** Whatever you copied is the first thing you see. Images
-  arrive with a preview, text with an excerpt.
-- **Paste anything.** Files copied in Explorer or Finder never reach the web
-  clipboard API. Press Ctrl+V with Plop open and they come through, whatever
-  the type.
-- **Pinned files.** Keep the files you send often and reuse them without
-  opening a dialog.
-- **Recents.** The last dozen files you uploaded, ready to send again.
-- **Drag out.** Pick an item up and drop it on the upload field, on any
-  area of a page that accepts dropped files, or into a text field.
-- **Text too.** Copied text uploads as `Clipboard.txt`, or goes straight
-  into a text field.
-- **Shortcut.** Ctrl+Shift+Space (⌘+Shift+Space on a Mac) opens Plop at the
-  pointer, for whatever field has focus. Change the keys at
-  `chrome://extensions/shortcuts`.
-- **Per-site control.** Turn Plop off on a site that does not suit it, or
-  everywhere, from the extensions menu.
-- **Dark and light.** Follows the system, or pick one.
+- **Clipboard first.** Whatever you copied is the first thing you see, with a
+  preview for images and an excerpt for text. Files copied in Explorer or
+  Finder never reach the web clipboard API at all — press Ctrl+V with Plop
+  open and they come through, whatever the type.
+- **Pinned files and recents.** Keep the files you send often, and reuse the
+  last dozen you uploaded, without opening a dialog.
+- **Drop it where you like.** Carry an item out of Plop onto the upload field,
+  onto any part of a page that takes dropped files, or into a text box.
+- **Anywhere, with a shortcut.** Ctrl+Shift+Space (⌘+Shift+Space on a Mac)
+  opens Plop at the pointer for whatever field has focus. Text goes in at the
+  caret; files go in the way a paste would.
+
+Also: copied text uploads as `Clipboard.txt`, Plop can be switched off per
+site or everywhere from the extensions menu, and it follows your dark or light
+theme.
+
+## How it works
+
+1. **Click an upload button.** Plop recognises the control the click would
+   have opened and takes the click instead of the system dialog. If it isn't
+   sure, it stays out of the way and the page behaves as usual.
+2. **Pick something.** Your clipboard, your pinned files, your recents — or
+   **Select from PC**, which hands the click straight back to the page and
+   opens the system dialog after all.
+3. **It lands in the page.** The file is handed to the site the way a real
+   drop or a real file choice would be, so the site sees no difference.
 
 ## Install
 
@@ -51,37 +61,13 @@ npm run build
 
 Then load `dist/` in `chrome://extensions` with developer mode on.
 
-## Development
+## Privacy
 
-```bash
-npm run dev        # design gallery and field test
-npm test           # unit checks
-npm run typecheck  # strict TypeScript
-npm run build      # the extension, into dist/
-npm run package    # a Chrome Web Store zip, into Versions/
-```
-
-`npm run dev` serves two pages:
-
-- `/` a gallery of every surface in both themes, for comparing against the
-  design.
-- `/test` a field test with a real upload control, real clipboard access and
-  real stored files.
-
-### Layout
-
-```
-src/
-  background/   service worker: update handling
-  content/      the part that runs on a page: detection and interception
-  popup/        the extensions-menu settings panel
-  ui/           widget, settings, and the pieces they share
-  styles/       design tokens and component styles
-  assets/       icons and the logo
-scripts/        build, manifest generation, packaging
-dev/            gallery and field test, never shipped
-test/           unit checks
-```
+Plop has no server, no account, no analytics and no tracking. Your clipboard,
+your files and your settings stay in your own browser, and nothing is ever
+sent to the developer or to anyone else. The full
+[privacy policy](https://fullmamasha.github.io/plop/privacy/) says what is
+kept and where.
 
 ## Updates
 
@@ -96,10 +82,8 @@ are not supported yet.
 
 ## Contributing
 
-Issues and pull requests are welcome. Use
-[Conventional Commits](https://www.conventionalcommits.org/) for commit
-titles, keep `main` buildable, and make sure `npm test`, `npm run typecheck`
-and `npm run build` all pass before opening a pull request.
+Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
+for the layout of the project and how to run it.
 
 ## License
 

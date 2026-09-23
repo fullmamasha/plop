@@ -1,0 +1,17 @@
+name: Idea
+description: Suggest something Plop should do
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The situation first, rather than the feature. It often has a simpler answer than the one either of us thought of.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like Plop to do?
+    validations:
+      required: true

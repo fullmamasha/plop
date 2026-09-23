@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/fullmamasha/plop/security/advisories/new
+    about: Please report these privately rather than in a public issue.
+  - name: How Plop works and how to run it
+    url: https://github.com/fullmamasha/plop/blob/main/CONTRIBUTING.md
+    about: Building from source, the project layout, and how to send a change.
