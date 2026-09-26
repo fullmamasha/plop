@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Known issues
+    url: https://github.com/fullmamasha/plop/blob/main/KNOWN-ISSUES.md
+    about: Shortcut not working, a site that opens the system dialog anyway, Chrome's own pages. Please check here first.
   - name: Security vulnerability
     url: https://github.com/fullmamasha/plop/security/advisories/new
     about: Please report these privately rather than in a public issue.

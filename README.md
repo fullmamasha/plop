@@ -80,6 +80,17 @@ update Chrome has already downloaded. There is no update server and no polling.
 Chrome 111 and later, and Chromium browsers built on it. Firefox and Safari
 are not supported yet.
 
+## Known issues
+
+Some upload buttons on a few sites still open the system dialog, Chrome's own
+pages are off limits to every extension, and a shortcut added by an update has
+to be assigned by hand once. [KNOWN-ISSUES.md](KNOWN-ISSUES.md) explains each
+one, with the fix where there is one.
+
+> **Updating from 0.1.x?** The keyboard shortcut will show as *Not set*, because
+> Chrome only assigns shortcuts on a fresh install.
+> [Here is how to set it](KNOWN-ISSUES.md#the-keyboard-shortcut-does-nothing-after-an-update).
+
 ## Contributing
 
 Issues and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md)
